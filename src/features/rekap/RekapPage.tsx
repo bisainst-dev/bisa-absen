@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useProfilStore } from '../../stores/useProfilStore';
@@ -47,7 +48,19 @@ import {
 
 export const RekapPage: React.FC = () => {
   const { profil } = useProfilStore();
-  const [activeReport, setActiveReport] = useState<'absensi' | 'nilai' | 'jurnal'>('absensi');
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const initialReport =
+    tabParam === 'nilai' || tabParam === 'jurnal' || tabParam === 'absensi'
+      ? tabParam
+      : 'absensi';
+  const [activeReport, setActiveReport] = useState<'absensi' | 'nilai' | 'jurnal'>(initialReport);
+
+  useEffect(() => {
+    if (tabParam === 'absensi' || tabParam === 'nilai' || tabParam === 'jurnal') {
+      setActiveReport(tabParam);
+    }
+  }, [tabParam]);
 
   const [kelasList, setKelasList] = useState<KelasData[]>([]);
   const [siswaList, setSiswaList] = useState<SiswaData[]>([]);

@@ -67,7 +67,7 @@ export const LainnyaPage: React.FC = () => {
         {
           to: '/portal',
           title: 'Portal Operator Sekolah',
-          desc: 'Master siswa massal, akun guru, & paket langganan',
+          desc: 'Master siswa, kelola guru & rekap laporan sekolah',
           icon: Building,
           color: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400',
         },
