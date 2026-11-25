@@ -1,0 +1,116 @@
+import type { UserAuthProfile, TenantProfile, UserRole } from '../../types/saas';
+import { useAuthStore } from '../../stores/useAuthStore';
+
+export const DEMO_TENANT: TenantProfile = {
+  id: 'tenant-demo-sdn01',
+  namaSekolah: 'SD Negeri 01 Teladan Mandiri',
+  npsn: '20104050',
+  jenjang: 'SD',
+  tier: 'school_starter',
+  kuotaGuru: 25,
+  kuotaSiswa: 450,
+  langgananAktifSampai: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 tahun ke depan
+  createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
+};
+
+export const DEMO_USERS: Record<UserRole, UserAuthProfile> = {
+  guru: {
+    id: 'usr-guru-budi',
+    email: 'budi.santoso@sekolah.sch.id',
+    namaLengkap: 'Budi Santoso, S.Pd.',
+    namaPanggilan: 'Pak Budi',
+    peran: 'guru',
+    tenantId: DEMO_TENANT.id,
+    sekolahNama: DEMO_TENANT.namaSekolah,
+    telepon: '081234567890',
+  },
+  operator: {
+    id: 'usr-ops-hendra',
+    email: 'operator@sekolah.sch.id',
+    namaLengkap: 'Hendra Gunawan, S.Kom.',
+    namaPanggilan: 'Pak Hendra',
+    peran: 'operator',
+    tenantId: DEMO_TENANT.id,
+    sekolahNama: DEMO_TENANT.namaSekolah,
+    telepon: '081298765432',
+  },
+  kepsek: {
+    id: 'usr-kepsek-siti',
+    email: 'kepsek@sekolah.sch.id',
+    namaLengkap: 'Dr. Hj. Siti Fatimah, M.Pd.',
+    namaPanggilan: 'Bu Siti',
+    peran: 'kepsek',
+    tenantId: DEMO_TENANT.id,
+    sekolahNama: DEMO_TENANT.namaSekolah,
+    telepon: '081122334455',
+  },
+  superadmin: {
+    id: 'usr-admin-bisa',
+    email: 'admin@bisaabsen.id',
+    namaLengkap: 'Super Administrator BISA Absen',
+    namaPanggilan: 'Admin Pusat',
+    peran: 'superadmin',
+  },
+};
+
+export const authService = {
+  /**
+   * Simulasi login dengan akun demo cepat
+   */
+  async loginWithDemo(peran: UserRole = 'guru'): Promise<UserAuthProfile> {
+    const user = DEMO_USERS[peran];
+    const tenant = user.tenantId ? DEMO_TENANT : undefined;
+    useAuthStore.getState().login(user, tenant);
+    return user;
+  },
+
+  /**
+   * Login pengguna dengan Email & Password (bisa disambungkan ke Supabase client / REST API)
+   */
+  async loginWithEmail(email: string): Promise<UserAuthProfile> {
+    // Simulasi respons autentikasi
+    const role: UserRole = email.includes('operator')
+      ? 'operator'
+      : email.includes('kepsek')
+      ? 'kepsek'
+      : 'guru';
+
+    const user: UserAuthProfile = {
+      id: `usr_${Date.now()}`,
+      email,
+      namaLengkap: email.split('@')[0].toUpperCase(),
+      namaPanggilan: email.split('@')[0],
+      peran: role,
+      tenantId: DEMO_TENANT.id,
+      sekolahNama: DEMO_TENANT.namaSekolah,
+      token: `jwt_token_${Date.now()}`,
+    };
+
+    useAuthStore.getState().login(user, DEMO_TENANT);
+    return user;
+  },
+
+  /**
+   * Registrasi Guru Mandiri (B2C)
+   */
+  async registerGuruMandiri(nama: string, email: string): Promise<UserAuthProfile> {
+    const user: UserAuthProfile = {
+      id: `usr_${Date.now()}`,
+      email,
+      namaLengkap: nama,
+      namaPanggilan: nama.split(' ')[0],
+      peran: 'guru',
+      token: `jwt_token_${Date.now()}`,
+    };
+
+    useAuthStore.getState().login(user);
+    return user;
+  },
+
+  /**
+   * Keluar dari akun cloud (kembali ke penyimpanan lokal HP sepenuhnya)
+   */
+  async logout(): Promise<void> {
+    useAuthStore.getState().logout();
+  },
+};

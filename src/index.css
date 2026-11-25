@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  html, body {
+    height: 100%;
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Custom interactive touch target helper: ensure >= 44px */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Smooth transitions for theme toggle */
+body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
