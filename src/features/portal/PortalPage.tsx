@@ -293,7 +293,7 @@ export const PortalPage: React.FC = () => {
                 Kelola Akun & Penugasan Guru
               </h4>
               <p className="text-xs text-slate-500">
-                Atur akun guru pengampu, kelas yang diampu, dan hak akses jurnal mengajar di SDN 01 Teladan Mandiri.
+                Atur akun guru pengampu, kelas yang diampu, dan hak akses jurnal mengajar di SMP Negeri 2 Tanjung.
               </p>
               <Button size="sm" variant="outline" className="w-full text-xs">
                 <UserCheck className="w-3.5 h-3.5 mr-1.5" /> Atur 14 Guru Pengampu

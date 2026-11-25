@@ -37,7 +37,7 @@ export const LoginPage: React.FC = () => {
       await saveProfil({
         namaGuru: user.namaLengkap,
         namaPanggilan: user.namaPanggilan || user.namaLengkap.split(' ')[0],
-        sekolah: user.sekolahNama || 'SD Negeri 01 Teladan Mandiri',
+        sekolah: user.sekolahNama || 'SMP Negeri 2 Tanjung',
         isOnboarded: true,
       });
 

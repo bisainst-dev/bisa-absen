@@ -2,10 +2,10 @@ import type { UserAuthProfile, TenantProfile, UserRole } from '../../types/saas'
 import { useAuthStore } from '../../stores/useAuthStore';
 
 export const DEMO_TENANT: TenantProfile = {
-  id: 'tenant-demo-sdn01',
-  namaSekolah: 'SD Negeri 01 Teladan Mandiri',
+  id: 'tenant-demo-smpn2',
+  namaSekolah: 'SMP Negeri 2 Tanjung',
   npsn: '20104050',
-  jenjang: 'SD',
+  jenjang: 'SMP',
   tier: 'school_starter',
   kuotaGuru: 25,
   kuotaSiswa: 450,
