@@ -34,37 +34,37 @@ export const LainnyaPage: React.FC = () => {
   // Filter Menu Berdasarkan Hak Akses Level Akun
   const menuList = isKepsek
     ? [
-        {
-          to: '/portal',
-          title: 'Dashboard Eksekutif Kepala Sekolah',
-          desc: 'Monitoring absensi seluruh kelas & jurnal guru live',
-          icon: ShieldCheck,
-          color: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400',
-        },
-        {
-          to: '/rekap',
-          title: 'Rekap & Unduh Dokumen Sekolah',
-          desc: 'Ekspor laporan kehadiran dan nilai format resmi dinas',
-          icon: FileDown,
-          color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400',
-        },
-        {
-          to: '/backup',
-          title: 'Cadangan & Pulihkan Data',
-          desc: 'Simpan file cadangan .backup.json & pulihkan',
-          icon: Database,
-          color: 'bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400',
-        },
-        {
-          to: '/pengaturan',
-          title: 'Pengaturan Sekolah & Profil',
-          desc: 'Nama sekolah, kop dinas, tema, dan preferensi',
-          icon: Settings,
-          color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-        },
-      ]
+      {
+        to: '/portal',
+        title: 'Dashboard Eksekutif Kepala Sekolah',
+        desc: 'Monitoring absensi seluruh kelas & jurnal guru live',
+        icon: ShieldCheck,
+        color: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400',
+      },
+      {
+        to: '/rekap',
+        title: 'Rekap & Unduh Dokumen Sekolah',
+        desc: 'Ekspor laporan kehadiran dan nilai format resmi dinas',
+        icon: FileDown,
+        color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400',
+      },
+      {
+        to: '/backup',
+        title: 'Cadangan & Pulihkan Data',
+        desc: 'Simpan file cadangan .backup.json & pulihkan',
+        icon: Database,
+        color: 'bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400',
+      },
+      {
+        to: '/pengaturan',
+        title: 'Pengaturan Sekolah & Profil',
+        desc: 'Nama sekolah, kop dinas, tema, dan preferensi',
+        icon: Settings,
+        color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+      },
+    ]
     : isOperator
-    ? [
+      ? [
         {
           to: '/portal',
           title: 'Portal Operator Sekolah',
@@ -108,7 +108,7 @@ export const LainnyaPage: React.FC = () => {
           color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
         },
       ]
-    : [
+      : [
         // Guru HANYA melihat dan mengakses fitur guru (Portal disembunyikan sepenuhnya!)
         {
           to: '/siswa',
@@ -182,8 +182,8 @@ export const LainnyaPage: React.FC = () => {
           {isKepsek
             ? 'Portal kepengawasan dan pelaporan eksekutif sekolah'
             : isOperator
-            ? 'Pengelolaan master data dan konfigurasi sekolah'
-            : 'Akses modul administrasi harian mengajar guru'}
+              ? 'Pengelolaan master data dan konfigurasi sekolah'
+              : 'Akses modul administrasi harian mengajar guru'}
         </p>
       </div>
 
