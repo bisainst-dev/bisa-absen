@@ -20,7 +20,9 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
-        className={twMerge(clsx('rounded-3xl p-5', variants[variant], className))}
+        className={twMerge(
+          clsx('rounded-3xl transition-all duration-200 overflow-hidden', variants[variant], className)
+        )}
         {...props}
       >
         {children}

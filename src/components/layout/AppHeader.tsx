@@ -38,24 +38,15 @@ export const AppHeader: React.FC = () => {
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo and Brand */}
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-2xl bg-brand-600 group-hover:bg-brand-700 transition-colors flex items-center justify-center text-white shadow-md shadow-brand-600/20">
-              <svg
-                className="w-6 h-6"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
-                <path d="m9 10 2 2 4-4" />
-              </svg>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Saku Guru"
+              className="w-10 h-10 object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
+            />
             <div className="text-left">
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-lg text-slate-900 dark:text-white tracking-tight leading-tight">
-                  BISA <span className="text-brand-600 dark:text-brand-400">Absen</span>
+                  Saku <span className="text-brand-600 dark:text-brand-400">Guru</span>
                 </span>
                 {isAuthenticated ? (
                   <Badge variant="brand" className="text-[10px] px-1.5 py-0 uppercase">
@@ -93,12 +84,12 @@ export const AppHeader: React.FC = () => {
               onClick={handleSyncClick}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all border ${
                 !isAuthenticated
-                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-brand-500'
+                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400'
                   : syncState === 'syncing'
-                  ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-300 animate-pulse'
+                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700 animate-pulse'
                   : dirtyCount > 0
-                  ? 'bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border-teal-300'
-                  : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-300'
+                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700'
+                  : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700'
               }`}
               title={
                 !isAuthenticated
@@ -108,7 +99,7 @@ export const AppHeader: React.FC = () => {
             >
               {!isAuthenticated ? (
                 <>
-                  <CloudOff className="w-3.5 h-3.5 text-slate-500" />
+                  <CloudOff className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                   <span className="hidden sm:inline">Lokal</span>
                 </>
               ) : syncState === 'syncing' ? (
@@ -118,7 +109,7 @@ export const AppHeader: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <Cloud className="w-3.5 h-3.5 text-teal-600" />
+                  <Cloud className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">
                     {dirtyCount > 0 ? `${dirtyCount} Sync` : 'Cloud'}
                   </span>
@@ -127,7 +118,7 @@ export const AppHeader: React.FC = () => {
             </button>
 
             {profil?.tahunPelajaran && (
-              <div className="hidden md:flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full">
+              <div className="hidden md:flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 px-3 py-1.5 rounded-full">
                 <span>TP {profil.tahunPelajaran}</span>
                 <span className="text-brand-600 dark:text-brand-400">({profil.semester})</span>
               </div>
@@ -145,7 +136,7 @@ export const AppHeader: React.FC = () => {
               }
               aria-label="Profil Akun"
             >
-              <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 flex items-center justify-center font-bold text-xs">
+              <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 flex items-center justify-center font-bold text-xs shadow-sm">
                 {isAuthenticated && user?.namaPanggilan ? (
                   user.namaPanggilan.charAt(0).toUpperCase()
                 ) : (

@@ -68,7 +68,7 @@ export function exportRekapAbsensiExcel(rekap: RekapAbsensiResult, kop: KopDanTa
 
   if (kop.tampilkanKredit) {
     signatureRows.push([]);
-    signatureRows.push(['Dokumen diolah otomatis via BISA Absen - Asisten Administrasi Guru']);
+    signatureRows.push(['Dokumen diolah otomatis via Saku Guru - Asisten Administrasi Guru']);
   }
 
   const allRows = [...metaRows, tableHeaders, ...dataRows, totalRow, ...signatureRows];
@@ -135,7 +135,7 @@ export function exportRekapNilaiExcel(rekap: RekapNilaiResult, kop: KopDanTandaT
 
   if (kop.tampilkanKredit) {
     signatureRows.push([]);
-    signatureRows.push(['Dokumen diolah otomatis via BISA Absen - Asisten Administrasi Guru']);
+    signatureRows.push(['Dokumen diolah otomatis via Saku Guru - Asisten Administrasi Guru']);
   }
 
   const allRows = [...metaRows, tableHeaders, ...dataRows, footerRow, ...signatureRows];
@@ -186,7 +186,7 @@ export function exportJurnalExcel(jurnalList: JurnalData[], kop: KopDanTandaTang
 
   if (kop.tampilkanKredit) {
     signatureRows.push([]);
-    signatureRows.push(['Dokumen diolah otomatis via BISA Absen - Asisten Administrasi Guru']);
+    signatureRows.push(['Dokumen diolah otomatis via Saku Guru - Asisten Administrasi Guru']);
   }
 
   const allRows = [...metaRows, tableHeaders, ...dataRows, ...signatureRows];

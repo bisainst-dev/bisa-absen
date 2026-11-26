@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -9,11 +9,12 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, helperText, id, ...props }, ref) => {
-    const generatedId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+  ({ label, error, helperText, id, className, ...props }, ref) => {
+    const defaultId = useId();
+    const generatedId = id || defaultId;
 
     return (
-      <div className="w-full flex flex-col gap-1.5 text-left">
+      <div className="w-full space-y-1.5 text-left">
         {label && (
           <label
             htmlFor={generatedId}
@@ -24,8 +25,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           </label>
         )}
         <input
-          id={generatedId}
           ref={ref}
+          id={generatedId}
           className={twMerge(
             clsx(
               'w-full px-4 py-3 rounded-2xl border text-base outline-none transition-all duration-200',

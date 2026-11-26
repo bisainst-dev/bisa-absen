@@ -146,20 +146,18 @@ export const BackupPage: React.FC = () => {
 
       {/* Status Cadangan Banner */}
       <Card
-        className={`p-5 border transition-colors ${
-          isStale
-            ? 'border-amber-200 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20'
-            : 'border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/20'
-        }`}
+        className={`p-5 border transition-colors ${isStale
+          ? 'border-amber-200 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20'
+          : 'border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/20'
+          }`}
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold shrink-0 ${
-                isStale
-                  ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300'
-                  : 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300'
-              }`}
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold shrink-0 ${isStale
+                ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300'
+                : 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300'
+                }`}
             >
               {isStale ? <AlertTriangle className="w-6 h-6" /> : <ShieldCheck className="w-6 h-6" />}
             </div>
@@ -252,7 +250,7 @@ export const BackupPage: React.FC = () => {
               Keamanan Pemulihan:
             </div>
             <p>• Sistem otomatis memverifikasi keaslian checksum</p>
-            <p>• Menolak berkas yang rusak atau bukan cadangan BISA Absen</p>
+            <p>• Menolak berkas yang rusak atau bukan cadangan Saku Guru</p>
             <p>• Menampilkan konfirmasi ringkasan data sebelum menimpa</p>
           </div>
 

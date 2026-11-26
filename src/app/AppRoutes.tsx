@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppLayout } from '../components/layout/AppLayout';
-import { OnboardingPage } from '../features/profil/OnboardingPage';
 import { BerandaPage } from '../features/beranda/BerandaPage';
 import { JadwalPage } from '../features/jadwal/JadwalPage';
 import { AbsensiPage } from '../features/absensi/AbsensiPage';
@@ -34,7 +33,6 @@ const RoleGuard: React.FC<{
     (currentRole === 'guest' && allowedRoles.includes('guru'));
 
   if (!isAllowed) {
-    // Arahkan ke fallback yang sesuai dengan level akun
     const targetFallback =
       fallbackPath !== '/'
         ? fallbackPath
@@ -51,10 +49,9 @@ const RoleGuard: React.FC<{
 };
 
 export const AppRoutes: React.FC = () => {
-  const { profil, loading, hasLoaded, loadProfil } = useProfilStore();
+  const { loading, hasLoaded, loadProfil } = useProfilStore();
   const { user, isAuthenticated } = useAuthStore();
   const { initTheme } = useThemeStore();
-  const location = useLocation();
 
   useEffect(() => {
     initTheme();
@@ -64,47 +61,36 @@ export const AppRoutes: React.FC = () => {
   if (loading && !hasLoaded) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
-        <div className="w-12 h-12 rounded-2xl bg-brand-600 flex items-center justify-center text-white mb-3 animate-pulse">
-          <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </div>
+        <img
+          src="/logo.png"
+          alt="Saku Guru"
+          className="w-16 h-16 object-contain mb-3 animate-pulse drop-shadow-md"
+        />
         <p className="text-sm font-bold text-slate-600 dark:text-slate-400">
-          Menyiapkan BISA Absen...
+          Menyiapkan Saku Guru...
         </p>
       </div>
     );
   }
 
   // 1. JIKA BELUM MASUK / SETELAH LOGOUT:
-  // Semua fitur terkunci rapat. Hanya halaman login yang dapat diakses!
+  // Langsung tampilkan halaman login saat akses alamat utama
   if (!isAuthenticated) {
     return (
       <Routes>
+        <Route path="/" element={<LoginPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
 
   // 2. JIKA SUDAH MASUK (AUTHENTICATED):
-  const isOnboarded = Boolean(profil?.isOnboarded);
-  const isOnboardingRoute = location.pathname === '/onboarding';
-
-  // Jika guru belum mengisi data onboarding, arahkan ke onboarding
-  if (!isOnboarded && !isOnboardingRoute && user?.peran === 'guru') {
-    return <Navigate to="/onboarding" replace />;
-  }
-
-  if (isOnboarded && isOnboardingRoute) {
-    return <Navigate to="/" replace />;
-  }
-
+  // Halaman onboarding dihilangkan sepenuhnya, langsung ke rute utama
   return (
     <Routes>
       <Route path="/login" element={<Navigate to="/" replace />} />
-      <Route path="/onboarding" element={<OnboardingPage />} />
+      <Route path="/onboarding" element={<Navigate to="/" replace />} />
 
       <Route element={<AppLayout />}>
         {/* Beranda: Guru ke Beranda Mengajar, Kepsek & Operator ke Portal */}
@@ -119,7 +105,7 @@ export const AppRoutes: React.FC = () => {
           }
         />
 
-        {/* Fitur Khusus Guru (Guru HANYA Mengakses Fitur Guru) */}
+        {/* Fitur Khusus Guru */}
         <Route
           path="/jadwal"
           element={
@@ -179,7 +165,7 @@ export const AppRoutes: React.FC = () => {
           }
         />
 
-        {/* Fitur Khusus Kepsek & Operator (Guru Dilarang Masuk ke Portal) */}
+        {/* Fitur Khusus Kepsek & Operator */}
         <Route
           path="/portal"
           element={

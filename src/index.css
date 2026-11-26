@@ -3,17 +3,13 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    -webkit-tap-highlight-color: transparent;
-  }
-  
   html, body {
     height: 100%;
     overscroll-behavior-y: none;
   }
 }
 
-/* Custom interactive touch target helper: ensure >= 44px */
+/* Touch targets and mobile optimization */
 .touch-target {
   min-height: 44px;
   min-width: 44px;

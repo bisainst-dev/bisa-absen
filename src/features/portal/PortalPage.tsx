@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useProfilStore } from '../../stores/useProfilStore';
 import { DEMO_TENANT } from '../../services/auth/authService';
 import { guruRepo, type GuruData } from '../guru/guruRepository';
 import {
@@ -31,6 +32,7 @@ import {
 export const PortalPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, tenant } = useAuthStore();
+  const { profil, saveProfil } = useProfilStore();
   const currentTenant = tenant || DEMO_TENANT;
   const currentRole = user?.peran || 'kepsek';
 
@@ -49,7 +51,7 @@ export const PortalPage: React.FC = () => {
     ? 'operator'
     : activeTab;
 
-  // State Simulasi Modal Pembayaran QRIS
+  // State Simulasi Modal Pembayaran QRIS (Superadmin)
   const [showPaymentModal, setShowPaymentModal] = useState<string | null>(null);
 
   // State Data Guru
@@ -67,6 +69,16 @@ export const PortalPage: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
 
+  // State Modal Kop Sekolah & Pengesahan
+  const [showKopModal, setShowKopModal] = useState(false);
+  const [kopSekolah, setKopSekolah] = useState('');
+  const [kopKepsek, setKopKepsek] = useState('');
+  const [kopNipKepsek, setKopNipKepsek] = useState('');
+  const [kopTP, setKopTP] = useState('');
+  const [kopSemester, setKopSemester] = useState<'Ganjil' | 'Genap'>('Ganjil');
+  const [kopTampilkanKredit, setKopTampilkanKredit] = useState(true);
+  const [kopSuccess, setKopSuccess] = useState<string | null>(null);
+
   // Muat data guru dari repository
   const loadGuru = async () => {
     try {
@@ -80,6 +92,18 @@ export const PortalPage: React.FC = () => {
   useEffect(() => {
     loadGuru();
   }, []);
+
+  // Sinkronisasi data kop sekolah dari profil store
+  useEffect(() => {
+    if (profil) {
+      setKopSekolah(profil.sekolah || currentTenant.namaSekolah || 'SMP Negeri 2 Tanjung');
+      setKopKepsek(profil.kepalaSekolah || 'Dr. Hj. Siti Fatimah, M.Pd.');
+      setKopNipKepsek(profil.nipKepsek || '197208151998032004');
+      setKopTP(profil.tahunPelajaran || '2026/2027');
+      setKopSemester(profil.semester || 'Ganjil');
+      setKopTampilkanKredit(profil.tampilkanKredit ?? true);
+    }
+  }, [profil, currentTenant.namaSekolah]);
 
   const handleSimpanGuru = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,6 +166,29 @@ export const PortalPage: React.FC = () => {
     }
   };
 
+  const handleSimpanKop = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await saveProfil({
+        sekolah: kopSekolah.trim(),
+        kepalaSekolah: kopKepsek.trim(),
+        nipKepsek: kopNipKepsek.trim(),
+        tahunPelajaran: kopTP.trim(),
+        semester: kopSemester,
+        tampilkanKredit: kopTampilkanKredit,
+      });
+
+      setKopSuccess('Kop sekolah & data pengesahan berhasil disimpan!');
+      setTimeout(() => {
+        setKopSuccess(null);
+        setShowKopModal(false);
+      }, 1200);
+    } catch (err) {
+      console.error(err);
+      alert('Gagal menyimpan data kop sekolah');
+    }
+  };
+
   // Data Mock Realistis untuk Tampilan Sekolah SMP Negeri 2 Tanjung
   const mockClassAttendance = [
     { kelas: 'Kelas 7A', guru: 'Pak Budi Santoso, S.Pd.', hadir: 31, total: 32, pct: 96.9, jurnal: true },
@@ -168,25 +215,25 @@ export const PortalPage: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight">
-                  {currentTenant.namaSekolah}
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                  {kopSekolah || currentTenant.namaSekolah}
                 </h1>
-                <Badge variant="brand" className="uppercase text-[10px]">
+                <span className="uppercase text-[10px] px-2 py-0.5 rounded-full font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
                   {currentTenant.tier.replace('_', ' ')}
-                </Badge>
+                </span>
               </div>
-              <p className="text-slate-300 text-xs mt-0.5">
-                NPSN: {currentTenant.npsn || '20104050'} • Jenjang {currentTenant.jenjang} • Status: Aktif
+              <p className="text-white/80 text-xs mt-0.5">
+                NPSN: {currentTenant.npsn || '20104050'} • Jenjang {currentTenant.jenjang} • Kepala Sekolah: {kopKepsek || 'Dr. Hj. Siti Fatimah, M.Pd.'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2.5 px-4 text-right">
-              <span className="text-[10px] text-slate-300 block uppercase font-bold">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2.5 px-4 text-right border border-white/10">
+              <span className="text-[10px] text-white/70 block uppercase font-bold">
                 {isOperator ? 'Hak Akses' : isKepsek ? 'Jabatan' : 'Status Akun'}
               </span>
-              <span className="text-sm font-extrabold text-teal-300">
+              <span className="text-sm font-extrabold text-teal-400">
                 {isOperator ? 'Operator Sekolah' : isKepsek ? 'Kepala Sekolah' : 'Super Administrator'}
               </span>
             </div>
@@ -202,8 +249,8 @@ export const PortalPage: React.FC = () => {
               onClick={() => setActiveTab('operator')}
               className={`pb-3 px-4 border-b-2 flex items-center gap-2 transition-all ${
                 effectiveTab === 'operator'
-                  ? 'border-brand-600 text-brand-600 dark:text-brand-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  ? 'border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400'
+                  : 'border-transparent text-slate-500 hover:text-brand-600 dark:hover:text-brand-400'
               }`}
             >
               <Building className="w-4 h-4" />
@@ -216,8 +263,8 @@ export const PortalPage: React.FC = () => {
               onClick={() => setActiveTab('kepsek')}
               className={`pb-3 px-4 border-b-2 flex items-center gap-2 transition-all ${
                 effectiveTab === 'kepsek'
-                  ? 'border-brand-600 text-brand-600 dark:text-brand-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  ? 'border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400'
+                  : 'border-transparent text-slate-500 hover:text-brand-600 dark:hover:text-brand-400'
               }`}
             >
               <ShieldCheck className="w-4 h-4" />
@@ -231,8 +278,8 @@ export const PortalPage: React.FC = () => {
               onClick={() => setActiveTab('billing')}
               className={`pb-3 px-4 border-b-2 flex items-center gap-2 transition-all ${
                 effectiveTab === 'billing'
-                  ? 'border-brand-600 text-brand-600 dark:text-brand-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  ? 'border-brand-600 text-brand-600 dark:border-brand-400 dark:text-brand-400'
+                  : 'border-transparent text-slate-500 hover:text-brand-600 dark:hover:text-brand-400'
               }`}
             >
               <CreditCard className="w-4 h-4" />
@@ -242,8 +289,8 @@ export const PortalPage: React.FC = () => {
         </div>
       ) : (
         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2 text-brand-700 dark:text-brand-300 font-extrabold text-sm sm:text-base">
-            <ShieldCheck className="w-5 h-5 text-brand-600" />
+          <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400 font-extrabold text-sm sm:text-base">
+            <ShieldCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
             <span>Dashboard Eksekutif Kepala Sekolah</span>
           </div>
           <Badge variant="brand" className="text-xs">
@@ -386,12 +433,145 @@ export const PortalPage: React.FC = () => {
       ========================================================================= */}
       {!isKepsek && effectiveTab === 'operator' && (
         <div className="space-y-6">
-          {/* 1. SEKSI FITUR REKAPITULASI (REKAP ABSENSI, REKAP NILAI, REKAP JURNAL) */}
+          {/* =========================================================================
+              1. MENU OPERATOR UTAMA: TAMBAH GURU, KOP SEKOLAH & PENGESAHAN, MASTER SISWA
+          ========================================================================= */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                  <FileSpreadsheet className="w-5 h-5 text-brand-600" />
+                  <Building className="w-5 h-5 text-brand-600" />
+                  <span>Menu Administrasi Utama Operator Sekolah</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Kelola guru pengampu, kop resmi sekolah & pengesahan, serta master data siswa
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* MENU 1: TAMBAH & KELOLA GURU */}
+              <Card className="p-5 space-y-3 border-t-4 border-t-brand-500 hover:shadow-md transition-all flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
+                      <GraduationCap className="w-5 h-5" />
+                    </div>
+                    <Badge variant="brand" className="text-[10px]">{guruList.length} Guru</Badge>
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-base text-slate-800 dark:text-slate-100">
+                      Tambah & Kelola Guru
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Daftarkan guru pengampu baru, atur mata pelajaran yang diampu, dan tentukan rombel kelas.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    className="w-full text-xs justify-center"
+                    onClick={() => {
+                      setFormError(null);
+                      setShowAddGuruModal(true);
+                    }}
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1.5" /> + Tambah Guru Baru
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full text-xs justify-center"
+                    onClick={() => setShowGuruListModal(true)}
+                  >
+                    <Users className="w-3.5 h-3.5 mr-1.5" /> Lihat Semua Guru ({guruList.length})
+                  </Button>
+                </div>
+              </Card>
+
+              {/* MENU 2: KOP SEKOLAH & PENGESAHAN */}
+              <Card className="p-5 space-y-3 border-t-4 border-t-amber-500 hover:shadow-md transition-all flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                      <Building className="w-5 h-5" />
+                    </div>
+                    <Badge variant="warning" className="text-[10px]">Dokumen Resmi</Badge>
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-base text-slate-800 dark:text-slate-100">
+                      Kop Sekolah & Pengesahan
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Atur nama resmi instansi, logo, NIP & Nama Kepala Sekolah untuk cetak otomatis di lembar dokumen PDF/Word.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    className="w-full text-xs justify-center"
+                    onClick={() => setShowKopModal(true)}
+                  >
+                    <Settings className="w-3.5 h-3.5 mr-1.5" /> Atur Kop & Pengesahan
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full text-xs justify-center"
+                    onClick={() => navigate('/pengaturan')}
+                  >
+                    Buka Pengaturan Lengkap
+                  </Button>
+                </div>
+              </Card>
+
+              {/* MENU 3: MASTER DATA SISWA */}
+              <Card className="p-5 space-y-3 border-t-4 border-t-brand-500 hover:shadow-md transition-all flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <Badge variant="neutral" className="text-[10px]">Dapodik/Excel</Badge>
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-base text-slate-800 dark:text-slate-100">
+                      Master Data Siswa Sekolah
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Kelola basis data siswa seluruh rombel dan impor massal dari format Dapodik atau template Excel.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    className="w-full text-xs justify-center"
+                    onClick={() => navigate('/siswa')}
+                  >
+                    <Upload className="w-3.5 h-3.5 mr-1.5" /> Buka Master Siswa
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          </div>
+
+          {/* =========================================================================
+              2. SEKSI FITUR REKAPITULASI (REKAP ABSENSI, REKAP NILAI, REKAP JURNAL)
+          ========================================================================= */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <FileSpreadsheet className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                   <span>Pusat Rekapitulasi & Laporan Sekolah</span>
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -402,15 +582,15 @@ export const PortalPage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Kartu 1: Rekap Absensi */}
-              <Card className="p-5 space-y-3 border-t-4 border-t-emerald-500 hover:shadow-md transition-all">
+              <Card className="p-5 space-y-3 border-t-4 border-t-brand-500 hover:shadow-md transition-all">
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center font-bold">
+                  <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
                     <UserCheck className="w-5 h-5" />
                   </div>
-                  <Badge variant="success" className="text-[10px]">Format Dinas</Badge>
+                  <Badge variant="brand" className="text-[10px]">Format Dinas</Badge>
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-base text-slate-900 dark:text-white">
+                  <h4 className="font-extrabold text-base text-slate-800 dark:text-slate-100">
                     Rekap Absensi Siswa
                   </h4>
                   <p className="text-xs text-slate-500 mt-1">
@@ -428,15 +608,15 @@ export const PortalPage: React.FC = () => {
               </Card>
 
               {/* Kartu 2: Rekap Nilai */}
-              <Card className="p-5 space-y-3 border-t-4 border-t-sky-500 hover:shadow-md transition-all">
+              <Card className="p-5 space-y-3 border-t-4 border-t-amber-500 hover:shadow-md transition-all">
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950 text-sky-600 flex items-center justify-center font-bold">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
                     <Award className="w-5 h-5" />
                   </div>
-                  <Badge variant="brand" className="text-[10px]">Leger Nilai</Badge>
+                  <Badge variant="warning" className="text-[10px]">Leger Nilai</Badge>
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-base text-slate-900 dark:text-white">
+                  <h4 className="font-extrabold text-base text-slate-800 dark:text-slate-100">
                     Rekap Nilai Siswa
                   </h4>
                   <p className="text-xs text-slate-500 mt-1">
@@ -454,15 +634,15 @@ export const PortalPage: React.FC = () => {
               </Card>
 
               {/* Kartu 3: Rekap Jurnal */}
-              <Card className="p-5 space-y-3 border-t-4 border-t-indigo-500 hover:shadow-md transition-all">
+              <Card className="p-5 space-y-3 border-t-4 border-t-brand-500 hover:shadow-md transition-all">
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center font-bold">
+                  <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
                     <BookOpen className="w-5 h-5" />
                   </div>
                   <Badge variant="neutral" className="text-[10px]">Agenda Harian</Badge>
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-base text-slate-900 dark:text-white">
+                  <h4 className="font-extrabold text-base text-slate-800 dark:text-slate-100">
                     Rekap Jurnal Guru
                   </h4>
                   <p className="text-xs text-slate-500 mt-1">
@@ -481,28 +661,22 @@ export const PortalPage: React.FC = () => {
             </div>
           </div>
 
-          {/* 2. SEKSI KELOLA & TAMBAH GURU SEKOLAH */}
+          {/* =========================================================================
+              3. TABEL RINGKAS GURU TERDAFTAR
+          ========================================================================= */}
           <div className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-teal-600" />
-                  <span>Kelola Guru & Staf Pengampu</span>
+                  <span>Daftar Guru Pengampu ({guruList.length})</span>
                 </h3>
                 <p className="text-xs text-slate-500">
-                  {guruList.length} guru aktif terdaftar di {currentTenant.namaSekolah}
+                  Guru yang terdaftar mengajar di {kopSekolah || currentTenant.namaSekolah}
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs"
-                  onClick={() => setShowGuruListModal(true)}
-                >
-                  <Users className="w-3.5 h-3.5 mr-1.5" /> Kelola Semua Guru ({guruList.length})
-                </Button>
                 <Button
                   size="sm"
                   variant="primary"
@@ -512,12 +686,12 @@ export const PortalPage: React.FC = () => {
                     setShowAddGuruModal(true);
                   }}
                 >
-                  <Plus className="w-3.5 h-3.5 mr-1.5" /> Tambah Guru
+                  <Plus className="w-3.5 h-3.5 mr-1.5" /> Tambah Guru Baru
                 </Button>
               </div>
             </div>
 
-            {/* Cuplikan Daftar Guru */}
+            {/* Tabel Cuplikan Guru */}
             <Card className="overflow-hidden p-0 border border-slate-200 dark:border-slate-800">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
@@ -527,7 +701,7 @@ export const PortalPage: React.FC = () => {
                       <th className="py-3 px-4">NIP</th>
                       <th className="py-3 px-4">Mata Pelajaran</th>
                       <th className="py-3 px-4">Kelas Diampu</th>
-                      <th className="py-3 px-4">Email</th>
+                      <th className="py-3 px-4">Email Akun</th>
                       <th className="py-3 px-4 text-center">Status</th>
                       <th className="py-3 px-4 text-right">Aksi</th>
                     </tr>
@@ -576,53 +750,10 @@ export const PortalPage: React.FC = () => {
                     onClick={() => setShowGuruListModal(true)}
                     className="text-xs text-brand-600 dark:text-brand-400 font-bold hover:underline"
                   >
-                    Lihat {guruList.length - 5} guru lainnya...
+                    Lihat seluruh {guruList.length} guru...
                   </button>
                 </div>
               )}
-            </Card>
-          </div>
-
-          {/* 3. SEKSI MASTER SISWA & PENGATURAN INSTANSI */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="p-5 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-950 text-violet-600 flex items-center justify-center font-bold">
-                <Users className="w-5 h-5" />
-              </div>
-              <h4 className="font-extrabold text-base text-slate-900 dark:text-white">
-                Master Data Siswa Sekolah
-              </h4>
-              <p className="text-xs text-slate-500">
-                Impor data seluruh siswa dari format Dapodik atau Excel. Guru kelas akan otomatis menerima data rombel masing-masing.
-              </p>
-              <Button
-                size="sm"
-                variant="primary"
-                className="w-full text-xs justify-center"
-                onClick={() => navigate('/siswa')}
-              >
-                <Upload className="w-3.5 h-3.5 mr-1.5" /> Buka Master Siswa
-              </Button>
-            </Card>
-
-            <Card className="p-5 space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 flex items-center justify-center font-bold">
-                <Building className="w-5 h-5" />
-              </div>
-              <h4 className="font-extrabold text-base text-slate-900 dark:text-white">
-                Kop Sekolah & Pengesahan
-              </h4>
-              <p className="text-xs text-slate-500">
-                Atur nama instansi, logo sekolah, NIP Kepala Sekolah untuk dicetak otomatis pada footer & header dokumen PDF/Word seluruh guru.
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full text-xs justify-center"
-                onClick={() => navigate('/pengaturan')}
-              >
-                <Settings className="w-3.5 h-3.5 mr-1.5" /> Konfigurasi Kop Resmi
-              </Button>
             </Card>
           </div>
         </div>
@@ -635,7 +766,7 @@ export const PortalPage: React.FC = () => {
         <div className="space-y-6">
           <div className="text-center max-w-lg mx-auto space-y-1">
             <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Pilihan Paket Langganan BISA Absen SaaS
+              Pilihan Paket Langganan Saku Guru SaaS
             </h3>
             <p className="text-xs text-slate-500">
               Pilih paket sesuai kebutuhan Anda: guru mandiri atau institusi sekolah.
@@ -763,7 +894,7 @@ export const PortalPage: React.FC = () => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => alert('Silakan hubungi WhatsApp resmi BISA Absen Enterprise: 0812-XXXX-XXXX')}
+                onClick={() => alert('Silakan hubungi WhatsApp resmi Saku Guru Enterprise: 0812-XXXX-XXXX')}
                 className="w-full justify-center"
               >
                 Konsultasi Yayasan
@@ -789,7 +920,7 @@ export const PortalPage: React.FC = () => {
                     Tambah Guru Baru
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Daftarkan guru pengampu ke {currentTenant.namaSekolah}
+                    Daftarkan guru pengampu ke {kopSekolah || currentTenant.namaSekolah}
                   </p>
                 </div>
               </div>
@@ -935,7 +1066,7 @@ export const PortalPage: React.FC = () => {
                     Daftar Guru Pengampu
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Total {guruList.length} guru di {currentTenant.namaSekolah}
+                    Total {guruList.length} guru di {kopSekolah || currentTenant.namaSekolah}
                   </p>
                 </div>
               </div>
@@ -1017,7 +1148,154 @@ export const PortalPage: React.FC = () => {
       )}
 
       {/* =========================================================================
-          MODAL 3: SIMULASI PEMBAYARAN QRIS / VA (HANYA UNTUK SUPERADMIN)
+          MODAL 3: PENGATURAN KOP SEKOLAH & PENGESAHAN DOKUMEN
+      ========================================================================= */}
+      {showKopModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <Card className="w-full max-w-lg p-6 space-y-4 text-left relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 flex items-center justify-center font-bold">
+                  <Building className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
+                    Kop Sekolah & Pengesahan
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Konfigurasi kop surat resmi dan data Kepala Sekolah
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowKopModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {kopSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                <span>{kopSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSimpanKop} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Nama Resmi Sekolah / Instansi <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Contoh: SMP Negeri 2 Tanjung"
+                  value={kopSekolah}
+                  onChange={(e) => setKopSekolah(e.target.value)}
+                  className="w-full text-xs font-bold"
+                  required
+                />
+                <span className="text-[11px] text-slate-400">
+                  Dicetak pada baris utama kop dokumen resmi laporan absensi, nilai, dan jurnal.
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Tahun Pelajaran <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Contoh: 2026/2027"
+                    value={kopTP}
+                    onChange={(e) => setKopTP(e.target.value)}
+                    className="w-full text-xs"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Semester Aktif
+                  </label>
+                  <select
+                    value={kopSemester}
+                    onChange={(e) => setKopSemester(e.target.value as 'Ganjil' | 'Genap')}
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200"
+                  >
+                    <option value="Ganjil">Semester Ganjil</option>
+                    <option value="Genap">Semester Genap</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t space-y-3">
+                <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 block uppercase tracking-wider">
+                  Pejabat Penandatangan Dokumen (Kepala Sekolah)
+                </span>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Nama Lengkap Kepala Sekolah & Gelar
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Contoh: Dr. Hj. Siti Fatimah, M.Pd."
+                    value={kopKepsek}
+                    onChange={(e) => setKopKepsek(e.target.value)}
+                    className="w-full text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    NIP Kepala Sekolah
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Contoh: 197208151998032004"
+                    value={kopNipKepsek}
+                    onChange={(e) => setKopNipKepsek(e.target.value)}
+                    className="w-full text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 border-t">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={kopTampilkanKredit}
+                    onChange={(e) => setKopTampilkanKredit(e.target.checked)}
+                    className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4"
+                  />
+                  <span className="text-xs text-slate-600 dark:text-slate-300">
+                    Sertakan catatan kaki resmi aplikasi pada ekspor berkas dinas
+                  </span>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowKopModal(false)}
+                >
+                  Batal
+                </Button>
+                <Button type="submit" variant="primary" size="sm">
+                  Simpan Kop & Pengesahan
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL 4: SIMULASI PEMBAYARAN QRIS / VA (HANYA UNTUK SUPERADMIN)
       ========================================================================= */}
       {showPaymentModal && isSuperAdmin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">

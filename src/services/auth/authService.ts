@@ -47,7 +47,7 @@ export const DEMO_USERS: Record<UserRole, UserAuthProfile> = {
   superadmin: {
     id: 'usr-admin-bisa',
     email: 'admin@bisaabsen.id',
-    namaLengkap: 'Super Administrator BISA Absen',
+    namaLengkap: 'Super Administrator Saku Guru',
     namaPanggilan: 'Admin Pusat',
     peran: 'superadmin',
   },
@@ -72,8 +72,8 @@ export const authService = {
     const role: UserRole = email.includes('operator')
       ? 'operator'
       : email.includes('kepsek')
-      ? 'kepsek'
-      : 'guru';
+        ? 'kepsek'
+        : 'guru';
 
     const user: UserAuthProfile = {
       id: `usr_${Date.now()}`,
@@ -83,6 +83,35 @@ export const authService = {
       peran: role,
       tenantId: DEMO_TENANT.id,
       sekolahNama: DEMO_TENANT.namaSekolah,
+      token: `jwt_token_${Date.now()}`,
+    };
+
+    useAuthStore.getState().login(user, DEMO_TENANT);
+    return user;
+  },
+
+  /**
+   * Registrasi Akun Pengguna Baru (Guru, Kepsek, atau Operator)
+   */
+  async register(params: {
+    namaLengkap: string;
+    namaPanggilan?: string;
+    email: string;
+    password?: string;
+    peran: UserRole;
+    sekolahNama?: string;
+    nip?: string;
+    telepon?: string;
+  }): Promise<UserAuthProfile> {
+    const user: UserAuthProfile = {
+      id: `usr_${Date.now()}`,
+      email: params.email.trim(),
+      namaLengkap: params.namaLengkap.trim(),
+      namaPanggilan: params.namaPanggilan?.trim() || params.namaLengkap.trim().split(' ')[0],
+      peran: params.peran,
+      tenantId: DEMO_TENANT.id,
+      sekolahNama: params.sekolahNama?.trim() || DEMO_TENANT.namaSekolah,
+      telepon: params.telepon?.trim(),
       token: `jwt_token_${Date.now()}`,
     };
 

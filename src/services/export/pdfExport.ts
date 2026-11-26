@@ -83,7 +83,7 @@ function drawSignatures(doc: jsPDF, kop: KopDanTandaTangan, startY: number) {
     doc.setFontSize(7.5);
     doc.setTextColor(140, 150, 160);
     doc.text(
-      'Dokumen resmi diolah secara otomatis via BISA Absen - Asisten Administrasi Guru',
+      'Dokumen resmi diolah secara otomatis via Saku Guru - Asisten Administrasi Guru',
       pageWidth / 2,
       pageHeight - 8,
       { align: 'center' }

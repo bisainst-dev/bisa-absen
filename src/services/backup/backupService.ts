@@ -83,7 +83,7 @@ export const backupService = {
     const jsonStr = JSON.stringify(backupObj, null, 2);
 
     const dateStr = new Date().toISOString().split('T')[0];
-    const filename = `BISA_Absen_${dateStr}.backup.json`;
+    const filename = `Saku_Guru_${dateStr}.backup.json`;
 
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -124,7 +124,7 @@ export const backupService = {
 
     const obj = parsed as Record<string, unknown>;
 
-    if (obj.app !== 'BISA_ABSEN') {
+    if (obj.app !== 'BISA_ABSEN' && obj.app !== 'SAKU_GURU') {
       return {
         valid: false,
         pesanError: 'File ini bukan file cadangan aplikasi BISA Absen',

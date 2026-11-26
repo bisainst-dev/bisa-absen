@@ -530,7 +530,7 @@ export const OnboardingPage: React.FC = () => {
                   className="w-5 h-5 rounded text-brand-600 focus:ring-brand-500 accent-brand-600"
                 />
                 <span className="text-xs text-slate-600 dark:text-slate-400">
-                  Sertakan catatan kaki 'Dibuat dengan BISA Absen' di dokumen cetak
+                  Sertakan catatan kaki 'Dibuat dengan Saku Guru' di dokumen cetak
                 </span>
               </label>
             </div>
@@ -546,7 +546,7 @@ export const OnboardingPage: React.FC = () => {
                 isLoading={isSubmitting}
                 className="w-full sm:w-auto"
               >
-                Mulai Gunakan BISA Absen
+                Mulai Gunakan Saku Guru
               </Button>
             </div>
           </Card>

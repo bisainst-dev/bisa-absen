@@ -669,7 +669,7 @@ export const RekapPage: React.FC = () => {
           {/* Footer Kredit */}
           {kopData.tampilkanKredit && (
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-[10px] text-slate-400">
-              Dokumen resmi diolah secara otomatis via BISA Absen - Asisten Administrasi Guru
+              Dokumen resmi diolah secara otomatis via Saku Guru - Asisten Administrasi Guru
             </div>
           )}
         </div>

@@ -108,7 +108,7 @@ export const PengaturanPage: React.FC = () => {
   const handleTestTts = () => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(
-        `Halo ${namaPanggilan || 'Ibu Guru'}, ini adalah uji coba pengingat suara BISA Absen.`
+        `Halo ${namaPanggilan || 'Ibu Guru'}, ini adalah uji coba pengingat suara Saku Guru.`
       );
       utterance.lang = 'id-ID';
       window.speechSynthesis.speak(utterance);
@@ -323,7 +323,7 @@ export const PengaturanPage: React.FC = () => {
         <label className="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer">
           <div>
             <p className="font-semibold text-sm text-slate-800 dark:text-slate-200">
-              Tampilkan Catatan Kaki 'Dibuat dengan BISA Absen'
+              Tampilkan Catatan Kaki 'Dibuat dengan Saku Guru'
             </p>
             <p className="text-xs text-slate-500">Dapat dimatikan bila menginginkan dokumen polos</p>
           </div>

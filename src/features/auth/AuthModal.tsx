@@ -114,7 +114,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 <Cloud className="w-6 h-6" />
               </div>
               <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-                Masuk ke Akun Cloud BISA Absen
+                Masuk ke Akun Cloud Saku Guru
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Gunakan alamat email dan kata sandi akun sekolah atau akun guru Anda untuk mulai sinkronisasi.

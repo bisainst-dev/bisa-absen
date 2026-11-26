@@ -20,6 +20,7 @@ import {
   Building,
   LogOut,
   Cloud,
+  GraduationCap,
 } from 'lucide-react';
 
 export const LainnyaPage: React.FC = () => {
@@ -67,21 +68,35 @@ export const LainnyaPage: React.FC = () => {
         {
           to: '/portal',
           title: 'Portal Operator Sekolah',
-          desc: 'Master siswa, kelola guru & rekap laporan sekolah',
+          desc: 'Dashboard manajemen utama sekolah dan statistik',
           icon: Building,
           color: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400',
         },
         {
+          to: '/portal',
+          title: 'Tambah & Kelola Guru',
+          desc: 'Tambah akun guru baru, penugasan mapel, dan rombel kelas',
+          icon: GraduationCap,
+          color: 'bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400',
+        },
+        {
+          to: '/pengaturan',
+          title: 'Kop Sekolah & Pengesahan',
+          desc: 'Nama sekolah resmi, logo, dan NIP Kepala Sekolah',
+          icon: Settings,
+          color: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400',
+        },
+        {
           to: '/siswa',
           title: 'Kelola & Impor Siswa Sekolah',
-          desc: 'Daftar seluruh siswa dan impor template Excel',
+          desc: 'Daftar seluruh siswa dan impor template Excel/Dapodik',
           icon: Users,
           color: 'bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-400',
         },
         {
           to: '/rekap',
-          title: 'Rekap & Unduh Dokumen',
-          desc: 'Ekspor laporan ke PDF, Excel, dan Word',
+          title: 'Rekap Absensi, Nilai & Jurnal',
+          desc: 'Ekspor laporan kehadiran, nilai, dan agenda mengajar dinas',
           icon: FileDown,
           color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400',
         },
@@ -90,13 +105,6 @@ export const LainnyaPage: React.FC = () => {
           title: 'Cadangan & Pulihkan Data',
           desc: 'Simpan file cadangan .backup.json & pulihkan',
           icon: Database,
-          color: 'bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400',
-        },
-        {
-          to: '/pengaturan',
-          title: 'Pengaturan & Profil',
-          desc: 'Biodata sekolah, tema, dan preferensi',
-          icon: Settings,
           color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
         },
       ]
@@ -279,7 +287,7 @@ export const LainnyaPage: React.FC = () => {
           <ShieldCheck className="w-5 h-5 text-teal-600 shrink-0" />
           <div>
             <p className="font-bold text-slate-800 dark:text-slate-200">
-              BISA Absen v1.0.0
+              Saku Guru v1.0.0
             </p>
             <p className="mt-0.5 text-[11px]">
               Platform Administrasi Guru Terpadu • Siap Online & Offline.

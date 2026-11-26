@@ -9,20 +9,20 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['logo.png', 'favicon.svg'],
       manifest: {
-        name: 'BISA Absen - Asisten Administrasi Guru',
-        short_name: 'BISA Absen',
-        description: 'Asisten administrasi harian guru: absensi, jurnal mengajar, nilai, jadwal, dan rekap dokumen offline.',
+        name: 'Saku Guru - Asisten Administrasi Guru',
+        short_name: 'Saku Guru',
+        description: 'Saku Guru: Asisten administrasi harian guru: absensi, jurnal mengajar, nilai, jadwal, dan rekap dokumen offline.',
         theme_color: '#0d9488',
         background_color: '#f8fafc',
         display: 'standalone',
         orientation: 'portrait',
         icons: [
           {
-            src: '/favicon.svg',
+            src: '/logo.png',
             sizes: '192x192 512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable',
           },
         ],

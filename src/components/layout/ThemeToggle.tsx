@@ -1,9 +1,9 @@
 import React from 'react';
-import { useThemeStore, type ThemeMode } from '../../stores/useThemeStore';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
+import { useThemeStore } from '../../stores/useThemeStore';
 
 export const ThemeToggle: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
-  const { tema, effectiveTheme, setTema } = useThemeStore();
+  const { tema, setTema, effectiveTheme } = useThemeStore();
 
   const cycleTheme = () => {
     if (tema === 'system') setTema('light');
@@ -13,8 +13,8 @@ export const ThemeToggle: React.FC<{ compact?: boolean }> = ({ compact = false }
 
   const getLabel = () => {
     if (tema === 'system') return 'Sistem';
-    if (tema === 'light') return 'Terang';
-    return 'Gelap';
+    if (tema === 'dark') return 'Gelap';
+    return 'Terang';
   };
 
   if (compact) {
@@ -35,10 +35,10 @@ export const ThemeToggle: React.FC<{ compact?: boolean }> = ({ compact = false }
     );
   }
 
-  const options: { mode: ThemeMode; label: string; icon: React.ReactNode }[] = [
-    { mode: 'light', label: 'Terang', icon: <Sun className="w-4 h-4" /> },
-    { mode: 'dark', label: 'Gelap', icon: <Moon className="w-4 h-4" /> },
-    { mode: 'system', label: 'Otomatis', icon: <Monitor className="w-4 h-4" /> },
+  const options: { mode: 'light' | 'dark' | 'system'; label: string }[] = [
+    { mode: 'light', label: 'Terang' },
+    { mode: 'dark', label: 'Gelap' },
+    { mode: 'system', label: 'Sistem' },
   ];
 
   return (
@@ -55,7 +55,8 @@ export const ThemeToggle: React.FC<{ compact?: boolean }> = ({ compact = false }
           }`}
           aria-pressed={tema === opt.mode}
         >
-          {opt.icon}
+          {opt.mode === 'light' && <Sun className="w-3.5 h-3.5 text-amber-500" />}
+          {opt.mode === 'dark' && <Moon className="w-3.5 h-3.5 text-teal-400" />}
           <span>{opt.label}</span>
         </button>
       ))}
