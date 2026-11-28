@@ -160,11 +160,11 @@ export const LoginPage: React.FC = () => {
         <div className="text-center space-y-2">
           <img
             src="/logo.png"
-            alt="Saku Guru"
+            alt="Esduta Gate"
             className="w-24 h-24 mx-auto object-contain drop-shadow-md animate-in zoom-in-90 duration-300"
           />
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Saku <span className="text-brand-600 dark:text-brand-400">Guru</span>
+            Esduta <span className="text-brand-600 dark:text-brand-400">Gate</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium max-w-xs mx-auto">
             Asisten Administrasi Harian Guru & Portal Sekolah Terpadu
@@ -289,54 +289,6 @@ export const LoginPage: React.FC = () => {
                     Daftar Akun Baru di Sini
                   </button>
                 </p>
-              </div>
-
-              {/* Panduan Akun Cepat */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-400 space-y-1.5">
-                <p className="font-bold text-brand-600 dark:text-brand-400">
-                  Akun Demo Siap Pakai:
-                </p>
-                <ul className="list-disc list-inside space-y-0.5">
-                  <li>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">Guru:</span>{' '}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEmail('budi@sekolah.sch.id');
-                        setPassword('guru123');
-                      }}
-                      className="text-brand-600 dark:text-brand-400 hover:underline font-mono font-bold"
-                    >
-                      budi@sekolah.sch.id
-                    </button>
-                  </li>
-                  <li>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">Kepsek:</span>{' '}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEmail('kepsek@sekolah.sch.id');
-                        setPassword('kepsek123');
-                      }}
-                      className="text-brand-600 dark:text-brand-400 hover:underline font-mono font-bold"
-                    >
-                      kepsek@sekolah.sch.id
-                    </button>
-                  </li>
-                  <li>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">Operator:</span>{' '}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEmail('operator@sekolah.sch.id');
-                        setPassword('operator123');
-                      }}
-                      className="text-brand-600 dark:text-brand-400 hover:underline font-mono font-bold"
-                    >
-                      operator@sekolah.sch.id
-                    </button>
-                  </li>
-                </ul>
               </div>
             </div>
           )}

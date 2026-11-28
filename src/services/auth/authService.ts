@@ -47,7 +47,7 @@ export const DEMO_USERS: Record<UserRole, UserAuthProfile> = {
   superadmin: {
     id: 'usr-admin-bisa',
     email: 'admin@bisaabsen.id',
-    namaLengkap: 'Super Administrator Saku Guru',
+    namaLengkap: 'Super Administrator Esduta Gate',
     namaPanggilan: 'Admin Pusat',
     peran: 'superadmin',
   },

@@ -63,11 +63,11 @@ export const AppRoutes: React.FC = () => {
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
         <img
           src="/logo.png"
-          alt="Saku Guru"
+          alt="Esduta Gate"
           className="w-16 h-16 object-contain mb-3 animate-pulse drop-shadow-md"
         />
         <p className="text-sm font-bold text-slate-600 dark:text-slate-400">
-          Menyiapkan Saku Guru...
+          Menyiapkan Esduta Gate...
         </p>
       </div>
     );

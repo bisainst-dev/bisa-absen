@@ -64,7 +64,7 @@ describe('backupService Unit Tests', () => {
     expect(result.pesanError).toContain('File ini bukan file cadangan');
   });
 
-  it('menolak berkas yang bukan berasal dari aplikasi BISA_ABSEN', () => {
+  it('menolak berkas yang bukan berasal dari aplikasi Esduta Gate', () => {
     const alienData = {
       app: 'OTHER_APP',
       version: 1,
@@ -73,7 +73,7 @@ describe('backupService Unit Tests', () => {
     };
     const result = backupService.validateBackupJson(JSON.stringify(alienData));
     expect(result.valid).toBe(false);
-    expect(result.pesanError).toContain('File ini bukan file cadangan aplikasi BISA Absen');
+    expect(result.pesanError).toContain('File ini bukan file cadangan aplikasi Esduta Gate');
   });
 
   it('mendeteksi jika checksum tidak cocok / berkas dimanipulasi', () => {

@@ -766,7 +766,7 @@ export const PortalPage: React.FC = () => {
         <div className="space-y-6">
           <div className="text-center max-w-lg mx-auto space-y-1">
             <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Pilihan Paket Langganan Saku Guru SaaS
+              Pilihan Paket Langganan Esduta Gate SaaS
             </h3>
             <p className="text-xs text-slate-500">
               Pilih paket sesuai kebutuhan Anda: guru mandiri atau institusi sekolah.
@@ -894,7 +894,7 @@ export const PortalPage: React.FC = () => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => alert('Silakan hubungi WhatsApp resmi Saku Guru Enterprise: 0812-XXXX-XXXX')}
+                onClick={() => alert('Silakan hubungi WhatsApp resmi Esduta Gate Enterprise: 0812-XXXX-XXXX')}
                 className="w-full justify-center"
               >
                 Konsultasi Yayasan

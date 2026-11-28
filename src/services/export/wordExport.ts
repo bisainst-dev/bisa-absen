@@ -232,7 +232,7 @@ export async function exportRekapAbsensiDocx(
         spacing: { before: 300 },
         children: [
           new TextRun({
-            text: 'Dokumen diolah otomatis via Saku Guru - Asisten Administrasi Guru',
+            text: 'Dokumen diolah otomatis via Esduta Gate - Asisten Administrasi Guru',
             size: 16,
             color: '888888',
           }),
@@ -352,7 +352,7 @@ export async function exportRekapNilaiDocx(
         spacing: { before: 300 },
         children: [
           new TextRun({
-            text: 'Dokumen diolah otomatis via Saku Guru - Asisten Administrasi Guru',
+            text: 'Dokumen diolah otomatis via Esduta Gate - Asisten Administrasi Guru',
             size: 16,
             color: '888888',
           }),
@@ -440,7 +440,7 @@ export async function exportJurnalDocx(
         spacing: { before: 300 },
         children: [
           new TextRun({
-            text: 'Dokumen diolah otomatis via Saku Guru - Asisten Administrasi Guru',
+            text: 'Dokumen diolah otomatis via Esduta Gate - Asisten Administrasi Guru',
             size: 16,
             color: '888888',
           }),

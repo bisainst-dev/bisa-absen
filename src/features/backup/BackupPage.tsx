@@ -250,7 +250,7 @@ export const BackupPage: React.FC = () => {
               Keamanan Pemulihan:
             </div>
             <p>• Sistem otomatis memverifikasi keaslian checksum</p>
-            <p>• Menolak berkas yang rusak atau bukan cadangan Saku Guru</p>
+            <p>• Menolak berkas yang rusak atau bukan cadangan Esduta Gate</p>
             <p>• Menampilkan konfirmasi ringkasan data sebelum menimpa</p>
           </div>
 

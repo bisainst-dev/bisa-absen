@@ -3,7 +3,7 @@ import { pengaturanRepo } from '../../features/pengaturan/repository';
 import type { GenericRecord } from '../../types/database';
 
 export interface BackupFileStructure {
-  app: 'BISA_ABSEN';
+  app: 'BISA_ABSEN' | 'SAKU_GURU' | 'ESDUTA_GATE';
   version: 1;
   createdAt: number;
   createdAtFormatted: string;
@@ -60,7 +60,7 @@ export const backupService = {
     const checksum = calculateChecksum(recordsString);
 
     const backup: BackupFileStructure = {
-      app: 'BISA_ABSEN',
+      app: 'ESDUTA_GATE',
       version: 1,
       createdAt: now,
       createdAtFormatted: dateFormatted,
@@ -83,7 +83,7 @@ export const backupService = {
     const jsonStr = JSON.stringify(backupObj, null, 2);
 
     const dateStr = new Date().toISOString().split('T')[0];
-    const filename = `Saku_Guru_${dateStr}.backup.json`;
+    const filename = `Esduta_Gate_${dateStr}.backup.json`;
 
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -124,10 +124,10 @@ export const backupService = {
 
     const obj = parsed as Record<string, unknown>;
 
-    if (obj.app !== 'BISA_ABSEN' && obj.app !== 'SAKU_GURU') {
+    if (obj.app !== 'BISA_ABSEN' && obj.app !== 'SAKU_GURU' && obj.app !== 'ESDUTA_GATE') {
       return {
         valid: false,
-        pesanError: 'File ini bukan file cadangan aplikasi BISA Absen',
+        pesanError: 'File ini bukan file cadangan aplikasi Esduta Gate',
       };
     }
 

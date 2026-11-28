@@ -287,7 +287,7 @@ export const LainnyaPage: React.FC = () => {
           <ShieldCheck className="w-5 h-5 text-teal-600 shrink-0" />
           <div>
             <p className="font-bold text-slate-800 dark:text-slate-200">
-              Saku Guru v1.0.0
+              Esduta Gate v1.0.0
             </p>
             <p className="mt-0.5 text-[11px]">
               Platform Administrasi Guru Terpadu • Siap Online & Offline.

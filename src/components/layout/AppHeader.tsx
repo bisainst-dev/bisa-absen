@@ -40,13 +40,13 @@ export const AppHeader: React.FC = () => {
           <Link to="/" className="flex items-center gap-2.5 group">
             <img
               src="/logo.png"
-              alt="Saku Guru"
+              alt="Esduta Gate"
               className="w-10 h-10 object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
             />
             <div className="text-left">
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-lg text-slate-900 dark:text-white tracking-tight leading-tight">
-                  Saku <span className="text-brand-600 dark:text-brand-400">Guru</span>
+                  Esduta <span className="text-brand-600 dark:text-brand-400">Gate</span>
                 </span>
                 {isAuthenticated ? (
                   <Badge variant="brand" className="text-[10px] px-1.5 py-0 uppercase">

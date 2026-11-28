@@ -11,9 +11,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['logo.png', 'favicon.svg'],
       manifest: {
-        name: 'Saku Guru - Asisten Administrasi Guru',
-        short_name: 'Saku Guru',
-        description: 'Saku Guru: Asisten administrasi harian guru: absensi, jurnal mengajar, nilai, jadwal, dan rekap dokumen offline.',
+        name: 'Esduta Gate - Asisten Administrasi Guru',
+        short_name: 'Esduta Gate',
+        description: 'Esduta Gate: Asisten administrasi harian guru: absensi, jurnal mengajar, nilai, jadwal, dan rekap dokumen offline.',
         theme_color: '#0d9488',
         background_color: '#f8fafc',
         display: 'standalone',
