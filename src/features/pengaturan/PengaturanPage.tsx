@@ -58,8 +58,8 @@ export const PengaturanPage: React.FC = () => {
         setSekolah(profil.sekolah);
         setTahunPelajaran(profil.tahunPelajaran);
         setSemester(profil.semester || 'Ganjil');
-        setKepalaSekolah(profil.kepalaSekolah || '');
-        setNipKepsek(profil.nipKepsek || '');
+        setKepalaSekolah(profil.kepalaSekolah || 'Dr. Hj. Siti Fatimah, M.Pd.');
+        setNipKepsek(profil.nipKepsek || '197208151998032004');
         setTampilkanKredit(profil.tampilkanKredit ?? true);
       }
       const p = await pengaturanRepo.getPengaturan();
@@ -83,8 +83,8 @@ export const PengaturanPage: React.FC = () => {
         sekolah,
         tahunPelajaran,
         semester,
-        kepalaSekolah,
-        nipKepsek,
+        kepalaSekolah: profil?.kepalaSekolah || 'Dr. Hj. Siti Fatimah, M.Pd.',
+        nipKepsek: profil?.nipKepsek || '197208151998032004',
         tampilkanKredit,
       });
 
@@ -255,19 +255,47 @@ export const PengaturanPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <Input
-              label="Nama Kepala Sekolah"
-              value={kepalaSekolah}
-              onChange={(e) => setKepalaSekolah(e.target.value)}
-              placeholder="Nama Kepala Sekolah"
-            />
-            <Input
-              label="NIP Kepala Sekolah"
-              value={nipKepsek}
-              onChange={(e) => setNipKepsek(e.target.value)}
-              placeholder="NIP Kepala Sekolah"
-            />
+          {/* Pengesahan Kepala Sekolah (Ditetapkan Terpusat oleh Operator) */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                Pejabat Penandatangan / Kepala Sekolah
+              </label>
+              <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-300 dark:border-amber-800">
+                <Lock className="w-3 h-3" /> Ditetapkan Operator
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div className="space-y-1">
+                <span className="text-xs text-slate-500 font-medium">Nama Kepala Sekolah & Gelar</span>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={kepalaSekolah || 'Dr. Hj. Siti Fatimah, M.Pd.'}
+                    readOnly
+                    disabled
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-bold cursor-not-allowed select-none"
+                  />
+                  <Lock className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs text-slate-500 font-medium">NIP Kepala Sekolah</span>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={nipKepsek || '197208151998032004'}
+                    readOnly
+                    disabled
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-mono font-bold cursor-not-allowed select-none"
+                  />
+                  <Lock className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                </div>
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              Nama dan NIP Kepala Sekolah berlaku seragam untuk seluruh akun guru dan dikelola secara terpusat oleh Operator Sekolah.
+            </p>
           </div>
         </div>
       </Card>

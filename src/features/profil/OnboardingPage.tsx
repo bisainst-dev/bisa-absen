@@ -7,7 +7,7 @@ import { Badge } from '../../components/ui/Badge';
 import { useProfilStore } from '../../stores/useProfilStore';
 import { kelasRepo } from '../siswa/kelasRepository';
 import { getAutoTahunPelajaran, getAutoSemester } from '../../lib/academicYear';
-import { CheckCircle2, ChevronRight, ChevronLeft, Plus, X, GraduationCap, School, BookOpen, Sparkles } from 'lucide-react';
+import { CheckCircle2, ChevronRight, ChevronLeft, Plus, X, GraduationCap, School, BookOpen, Sparkles, Lock } from 'lucide-react';
 
 const SUGGESTED_MAPEL = [
   'Tematik',
@@ -51,8 +51,8 @@ export const OnboardingPage: React.FC = () => {
   );
   const [customKelas, setCustomKelas] = useState('');
 
-  const [kepalaSekolah, setKepalaSekolah] = useState(profil?.kepalaSekolah || '');
-  const [nipKepsek, setNipKepsek] = useState(profil?.nipKepsek || '');
+  const kepalaSekolah = profil?.kepalaSekolah || 'Dr. Hj. Siti Fatimah, M.Pd.';
+  const nipKepsek = profil?.nipKepsek || '197208151998032004';
   const [tampilkanKredit, setTampilkanKredit] = useState(profil?.tampilkanKredit ?? true);
 
   const handleAddMapel = (item: string) => {
@@ -502,38 +502,48 @@ export const OnboardingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Optional Principal fields */}
-            <div className="space-y-3 pt-2 text-left">
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Data Kepala Sekolah (Opsional - untuk tanda tangan rekap)
-              </p>
+            {/* Principal fields (Ditetapkan Operator) */}
+            <div className="space-y-3 pt-2 text-left p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Data Kepala Sekolah (Pengesahan Dokumen)
+                </p>
+                <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-300 dark:border-amber-800">
+                  <Lock className="w-3 h-3" /> Ditetapkan Operator
+                </span>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
                   label="Nama Kepala Sekolah"
-                  placeholder="Contoh: Drs. H. Suryadi, M.Pd."
-                  value={kepalaSekolah}
-                  onChange={(e) => setKepalaSekolah(e.target.value)}
+                  value={kepalaSekolah || 'Dr. Hj. Siti Fatimah, M.Pd.'}
+                  readOnly
+                  disabled
+                  className="bg-slate-100 dark:bg-slate-800 font-bold cursor-not-allowed select-none"
                 />
                 <Input
                   label="NIP Kepala Sekolah"
-                  placeholder="19700101..."
-                  value={nipKepsek}
-                  onChange={(e) => setNipKepsek(e.target.value)}
+                  value={nipKepsek || '197208151998032004'}
+                  readOnly
+                  disabled
+                  className="bg-slate-100 dark:bg-slate-800 font-mono font-bold cursor-not-allowed select-none"
                 />
               </div>
-
-              <label className="flex items-center gap-3 pt-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={tampilkanKredit}
-                  onChange={(e) => setTampilkanKredit(e.target.checked)}
-                  className="w-5 h-5 rounded text-brand-600 focus:ring-brand-500 accent-brand-600"
-                />
-                <span className="text-xs text-slate-600 dark:text-slate-400">
-                  Sertakan catatan kaki 'Dibuat dengan Esduta Gate' di dokumen cetak
-                </span>
-              </label>
+              <p className="text-[11px] text-slate-500">
+                Data Kepala Sekolah berlaku seragam untuk semua guru dan ditetapkan oleh Operator Sekolah.
+              </p>
             </div>
+
+            <label className="flex items-center gap-3 pt-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={tampilkanKredit}
+                onChange={(e) => setTampilkanKredit(e.target.checked)}
+                className="w-5 h-5 rounded text-brand-600 focus:ring-brand-500 accent-brand-600"
+              />
+              <span className="text-xs text-slate-600 dark:text-slate-400">
+                Sertakan catatan kaki 'Dibuat dengan Esduta Gate' di dokumen cetak
+              </span>
+            </label>
 
             <div className="pt-3 flex justify-between gap-3">
               <Button type="button" variant="outline" onClick={() => setStep(2)}>
