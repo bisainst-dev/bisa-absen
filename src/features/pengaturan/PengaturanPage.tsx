@@ -19,6 +19,7 @@ import {
   HelpCircle,
   LogOut,
   Cloud,
+  Lock,
 } from 'lucide-react';
 
 export const PengaturanPage: React.FC = () => {
@@ -205,6 +206,32 @@ export const PengaturanPage: React.FC = () => {
               value={sekolah}
               onChange={(e) => setSekolah(e.target.value)}
             />
+          </div>
+
+          {/* Mata Pelajaran (Terkunci Sesuai Master Data Operator) */}
+          <div className="space-y-1.5 text-left p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                Mata Pelajaran yang Diampu
+              </label>
+              <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-300 dark:border-amber-800">
+                <Lock className="w-3 h-3" /> Ditetapkan Operator
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {profil?.mapel && profil.mapel.length > 0 ? (
+                profil.mapel.map((m) => (
+                  <Badge key={m} variant="brand" className="text-xs px-3 py-1 font-bold">
+                    {m}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-xs text-slate-400 italic">Belum ada mata pelajaran yang ditetapkan</span>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-500 pt-1">
+              Akun guru tidak dapat mengubah nama mata pelajaran. Perubahan mapel dilakukan terpusat oleh Operator Sekolah.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

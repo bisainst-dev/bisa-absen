@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { authService } from '../../services/auth/authService';
 import { syncEngine } from '../../services/sync/syncEngine';
 import { useProfilStore } from '../../stores/useProfilStore';
+import { guruRepo } from '../guru/guruRepository';
 import {
   Lock,
   Mail,
@@ -36,11 +37,36 @@ export const LoginPage: React.FC = () => {
     try {
       const user = await authService.loginWithEmail(email.trim());
 
+      // Ambil data resmi guru dari master data untuk menyinkronkan mapel
+      let guruMapel: string[] | undefined = undefined;
+      let guruNip = '';
+      let guruKelas: string[] | undefined = undefined;
+
+      try {
+        const allGuru = await guruRepo.getAll();
+        const matched = allGuru.find(
+          (g) =>
+            (g.email && g.email.toLowerCase() === user.email.toLowerCase()) ||
+            g.nama.toLowerCase().includes(user.namaLengkap.toLowerCase()) ||
+            user.namaLengkap.toLowerCase().includes(g.nama.toLowerCase())
+        );
+        if (matched) {
+          if (matched.mapel) guruMapel = [matched.mapel];
+          if (matched.nip) guruNip = matched.nip;
+          if (matched.kelas) guruKelas = matched.kelas.split(',').map((k) => k.trim());
+        }
+      } catch (err) {
+        console.warn('Gagal membaca data guru pengampu:', err);
+      }
+
       // Langsung tandai isOnboarded: true agar tidak pernah masuk ke halaman onboarding
       await saveProfil({
         namaGuru: user.namaLengkap,
         namaPanggilan: user.namaPanggilan || user.namaLengkap.split(' ')[0],
         sekolah: user.sekolahNama || 'SMP Negeri 2 Tanjung',
+        nip: guruNip || undefined,
+        mapel: guruMapel,
+        kelasDiampu: guruKelas,
         isOnboarded: true,
       });
 

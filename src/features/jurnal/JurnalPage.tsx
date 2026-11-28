@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Lightbulb,
   Bell,
+  Lock,
 } from 'lucide-react';
 
 export const JurnalPage: React.FC = () => {
@@ -100,11 +101,16 @@ export const JurnalPage: React.FC = () => {
     });
   }, [jurnalList, filterKelasId, searchQuery]);
 
+  const availableMapel = useMemo(() => {
+    if (profil?.mapel && profil.mapel.length > 0) return profil.mapel;
+    return ['Matematika'];
+  }, [profil?.mapel]);
+
   // Handlers
   const handleOpenAdd = () => {
     setFormTanggal(new Date().toISOString().split('T')[0]);
     setFormKelasId(filterKelasId !== 'all' ? filterKelasId : kelasList[0]?.id || '');
-    setFormMapel(profil?.mapel?.[0] || 'Tematik');
+    setFormMapel(availableMapel[0] || 'Matematika');
 
     // Auto increment pertemuan ke berdasarkan kelas & mapel
     const sameSessionCount = jurnalList.filter(
@@ -435,23 +441,42 @@ export const JurnalPage: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-1.5 text-left">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    Mata Pelajaran
-                  </label>
-                  <input
-                    type="text"
-                    list="mapel-jurnal-options"
-                    value={formMapel}
-                    onChange={(e) => setFormMapel(e.target.value)}
-                    placeholder="Mata Pelajaran"
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-base outline-none focus:ring-2 focus:ring-brand-500"
-                    required
-                  />
-                  <datalist id="mapel-jurnal-options">
-                    {profil?.mapel?.map((m) => (
-                      <option key={m} value={m} />
-                    ))}
-                  </datalist>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      Mata Pelajaran
+                    </label>
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-0.5 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900">
+                      <Lock className="w-2.5 h-2.5" /> Terkunci
+                    </span>
+                  </div>
+                  {availableMapel.length > 1 ? (
+                    <select
+                      value={formMapel}
+                      onChange={(e) => setFormMapel(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-base outline-none focus:ring-2 focus:ring-brand-500 font-semibold"
+                      required
+                    >
+                      {availableMapel.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                      {!availableMapel.includes(formMapel) && formMapel && (
+                        <option value={formMapel}>{formMapel}</option>
+                      )}
+                    </select>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={formMapel || availableMapel[0] || 'Matematika'}
+                        readOnly
+                        disabled
+                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-base font-bold cursor-not-allowed select-none"
+                      />
+                      <Lock className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2" />
+                    </div>
+                  )}
                 </div>
               </div>
 
