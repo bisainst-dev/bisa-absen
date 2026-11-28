@@ -135,10 +135,10 @@ export const PortalPage: React.FC = () => {
     isKepsek ? 'kepsek' : 'operator'
   );
 
-  // Operator tidak boleh membuka billing
+  // Operator tidak boleh membuka billing atau database
   const effectiveTab = isKepsek
     ? 'kepsek'
-    : activeTab === 'billing' && !isSuperAdmin
+    : (activeTab === 'billing' || activeTab === 'database') && !isSuperAdmin
     ? 'operator'
     : activeTab;
 
@@ -391,8 +391,8 @@ export const PortalPage: React.FC = () => {
             </button>
           )}
 
-          {/* Tab Konfigurasi & Status Database Cloud (Supabase / Vercel) */}
-          {(isSuperAdmin || isOperator) && (
+          {/* Tab Konfigurasi & Status Database Server (Hanya Tingkat Admin / Superadmin) */}
+          {isSuperAdmin && (
             <button
               onClick={() => setActiveTab('database')}
               className={`pb-3 px-4 border-b-2 flex items-center gap-2 transition-all ${
@@ -402,7 +402,7 @@ export const PortalPage: React.FC = () => {
               }`}
             >
               <Database className="w-4 h-4" />
-              <span>Database Cloud</span>
+              <span>Database Server</span>
             </button>
           )}
         </div>
@@ -1116,9 +1116,9 @@ export const PortalPage: React.FC = () => {
       )}
 
       {/* =========================================================================
-          TAB 4: STATUS & PENGATURAN DATABASE SERVER (AAPANEL / MYSQL)
+          TAB 4: STATUS & PENGATURAN DATABASE SERVER (AAPANEL / MYSQL - KHUSUS ADMIN)
       ========================================================================= */}
-      {(isSuperAdmin || isOperator) && effectiveTab === 'database' && (
+      {isSuperAdmin && effectiveTab === 'database' && (
         <div className="space-y-6">
           {/* Header Tab Database */}
           <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
