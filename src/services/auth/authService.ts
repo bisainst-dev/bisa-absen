@@ -46,10 +46,12 @@ export const DEMO_USERS: Record<UserRole, UserAuthProfile> = {
   },
   superadmin: {
     id: 'usr-admin-bisa',
-    email: 'admin@bisaabsen.id',
-    namaLengkap: 'Super Administrator Esduta Gate',
+    email: 'admin@sekolah.sch.id',
+    namaLengkap: 'Administrator Utama Esduta Gate',
     namaPanggilan: 'Admin Pusat',
     peran: 'superadmin',
+    tenantId: DEMO_TENANT.id,
+    sekolahNama: DEMO_TENANT.namaSekolah,
   },
 };
 
@@ -68,10 +70,28 @@ export const authService = {
    * Login pengguna dengan Email & Password (bisa disambungkan ke Supabase client / REST API)
    */
   async loginWithEmail(email: string): Promise<UserAuthProfile> {
-    // Simulasi respons autentikasi
-    const role: UserRole = email.includes('operator')
+    const lowerEmail = email.toLowerCase().trim();
+
+    // Deteksi Akun Administrator / Super Admin
+    if (lowerEmail.includes('admin')) {
+      const user: UserAuthProfile = {
+        id: 'usr_admin_master',
+        email,
+        namaLengkap: 'Administrator Utama Esduta Gate',
+        namaPanggilan: 'Admin Pusat',
+        peran: 'superadmin',
+        tenantId: DEMO_TENANT.id,
+        sekolahNama: DEMO_TENANT.namaSekolah,
+        token: `jwt_token_admin_${Date.now()}`,
+      };
+      useAuthStore.getState().login(user, DEMO_TENANT);
+      return user;
+    }
+
+    // Simulasi respons autentikasi peran lainnya
+    const role: UserRole = lowerEmail.includes('operator')
       ? 'operator'
-      : email.includes('kepsek')
+      : lowerEmail.includes('kepsek')
         ? 'kepsek'
         : 'guru';
 

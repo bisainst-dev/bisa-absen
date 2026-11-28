@@ -19,7 +19,15 @@ export const BottomNav: React.FC = () => {
 
   // Navigasi Khusus Sesuai Level Akun
   const navItems =
-    currentRole === 'kepsek'
+    currentRole === 'superadmin'
+      ? [
+          { to: '/portal', label: 'Portal Admin', icon: Building },
+          { to: '/absensi', label: 'Absensi', icon: UserCheck },
+          { to: '/siswa', label: 'Siswa', icon: Users },
+          { to: '/rekap', label: 'Rekap Dinas', icon: FileDown },
+          { to: '/lainnya', label: 'Semua Menu', icon: MoreHorizontal },
+        ]
+      : currentRole === 'kepsek'
       ? [
           { to: '/', label: 'Beranda', icon: Home },
           { to: '/portal', label: 'Monitoring', icon: ShieldCheck },

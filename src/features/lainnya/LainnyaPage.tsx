@@ -21,18 +21,109 @@ import {
   LogOut,
   Cloud,
   GraduationCap,
+  Calendar,
+  UserCheck,
+  BookOpen,
 } from 'lucide-react';
 
 export const LainnyaPage: React.FC = () => {
   const { user, isAuthenticated } = useAuthStore();
   const currentRole = user?.peran || 'guru';
+  const isSuperAdmin = currentRole === 'superadmin';
   const isKepsek = currentRole === 'kepsek';
   const isOperator = currentRole === 'operator';
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Filter Menu Berdasarkan Hak Akses Level Akun
-  const menuList = isKepsek
+  const menuList = isSuperAdmin
+    ? [
+      {
+        to: '/portal',
+        title: 'Portal Manajemen & Pengawasan Sekolah',
+        desc: 'Statistik realtime, monitoring guru, dan paket langganan SaaS',
+        icon: Building,
+        color: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400',
+      },
+      {
+        to: '/portal',
+        title: 'Kelola Akun Guru & Rombel',
+        desc: 'Tambah akun guru, penugasan mata pelajaran, dan wali kelas',
+        icon: GraduationCap,
+        color: 'bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400',
+      },
+      {
+        to: '/siswa',
+        title: 'Master Siswa Sekolah',
+        desc: 'Basis data seluruh siswa, kenaikan kelas, dan impor Excel/Dapodik',
+        icon: Users,
+        color: 'bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-400',
+      },
+      {
+        to: '/absensi',
+        title: 'Absensi Harian Guru & Siswa',
+        desc: 'Pantau dan isi kehadiran siswa per kelas dan mata pelajaran',
+        icon: UserCheck,
+        color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400',
+      },
+      {
+        to: '/jurnal',
+        title: 'Jurnal & Agenda Mengajar',
+        desc: 'Catatan materi pertemuan, kendala kelas, dan tindak lanjut',
+        icon: BookOpen,
+        color: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400',
+      },
+      {
+        to: '/jadwal',
+        title: 'Jadwal Pembelajaran',
+        desc: 'Agenda jam mengajar mingguan dan kalender akademik',
+        icon: Calendar,
+        color: 'bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400',
+      },
+      {
+        to: '/nilai',
+        title: 'Penilaian Siswa',
+        desc: 'Daftar nilai tugas, penilaian harian, dan rata-rata',
+        icon: Award,
+        color: 'bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400',
+      },
+      {
+        to: '/rekap',
+        title: 'Rekap & Ekspor Laporan Dinas',
+        desc: 'Cetak dan unduh berkas resmi PDF, Excel, dan Word',
+        icon: FileDown,
+        color: 'bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400',
+      },
+      {
+        to: '/kegiatan',
+        title: 'Ekstrakurikuler & Les Tambahan',
+        desc: 'Pengelolaan kegiatan non-akademik siswa lintas kelas',
+        icon: Sparkles,
+        color: 'bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950 dark:text-fuchsia-400',
+      },
+      {
+        to: '/catatan',
+        title: 'Catatan Siswa & Pengingat',
+        desc: 'Log bimbingan konseling dan catatan perkembangan siswa',
+        icon: ClipboardList,
+        color: 'bg-orange-50 text-orange-600 dark:bg-orange-950 dark:text-orange-400',
+      },
+      {
+        to: '/backup',
+        title: 'Cadangan & Pemulihan Database',
+        desc: 'Ekspor berkas .backup.json dan audit keutuhan data sistem',
+        icon: Database,
+        color: 'bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400',
+      },
+      {
+        to: '/pengaturan',
+        title: 'Pengaturan Sekolah & Kop Dinas',
+        desc: 'Nama sekolah, logo, NIP kepala sekolah, dan konfigurasi sistem',
+        icon: Settings,
+        color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+      },
+    ]
+    : isKepsek
     ? [
       {
         to: '/portal',

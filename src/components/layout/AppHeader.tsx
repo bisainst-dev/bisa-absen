@@ -68,14 +68,14 @@ export const AppHeader: React.FC = () => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Tombol Pintas Portal Sekolah (Jika Peran Kepsek / Operator) */}
-            {isAuthenticated && (user?.peran === 'kepsek' || user?.peran === 'operator') && (
+            {/* Tombol Pintas Portal Sekolah (Jika Peran Kepsek / Operator / Superadmin) */}
+            {isAuthenticated && (user?.peran === 'kepsek' || user?.peran === 'operator' || user?.peran === 'superadmin') && (
               <Link
                 to="/portal"
                 className="hidden sm:flex items-center gap-1 text-xs font-bold text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-900/60 px-2.5 py-1.5 rounded-xl hover:bg-brand-100 transition-colors"
               >
                 <Building className="w-3.5 h-3.5" />
-                <span>Portal {user.peran === 'kepsek' ? 'Kepsek' : 'Operator'}</span>
+                <span>Portal {user.peran === 'superadmin' ? 'Admin' : user.peran === 'kepsek' ? 'Kepsek' : 'Operator'}</span>
               </Link>
             )}
 

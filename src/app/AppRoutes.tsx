@@ -93,11 +93,11 @@ export const AppRoutes: React.FC = () => {
       <Route path="/onboarding" element={<Navigate to="/" replace />} />
 
       <Route element={<AppLayout />}>
-        {/* Beranda: Guru ke Beranda Mengajar, Kepsek & Operator ke Portal */}
+        {/* Beranda: Guru ke Beranda Mengajar, Kepsek/Operator/Superadmin ke Portal */}
         <Route
           path="/"
           element={
-            user?.peran === 'kepsek' || user?.peran === 'operator' ? (
+            user?.peran === 'kepsek' || user?.peran === 'operator' || user?.peran === 'superadmin' ? (
               <Navigate to="/portal" replace />
             ) : (
               <BerandaPage />

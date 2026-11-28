@@ -48,7 +48,7 @@ export const LoginPage: React.FC = () => {
       await syncEngine.syncNow().catch(() => { });
 
       // Arahkan ke rute sesuai peran
-      if (user.peran === 'kepsek' || user.peran === 'operator') {
+      if (user.peran === 'kepsek' || user.peran === 'operator' || user.peran === 'superadmin') {
         navigate('/portal', { replace: true });
       } else {
         navigate('/', { replace: true });
