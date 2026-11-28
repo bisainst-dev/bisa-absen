@@ -470,9 +470,9 @@ export const PortalPage: React.FC = () => {
       )}
 
       {/* =========================================================================
-          PANEL KHUSUS SUPER ADMIN: LOGIN AS USER / IMPERSONASI
+          PANEL KHUSUS SUPER ADMIN & OPERATOR: LOGIN AS USER / IMPERSONASI
       ========================================================================= */}
-      {isSuperAdmin && (
+      {(isSuperAdmin || isOperator) && (
         <Card className="p-4 sm:p-5 border-2 border-amber-400/70 dark:border-amber-500/50 bg-gradient-to-r from-amber-50/60 via-white to-amber-50/30 dark:from-amber-950/30 dark:via-slate-900 dark:to-amber-950/20 space-y-3.5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2.5">
@@ -971,14 +971,14 @@ export const PortalPage: React.FC = () => {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            {isSuperAdmin && (
+                            {(isSuperAdmin || isOperator) && (
                               <button
                                 onClick={() => handleImpersonateGuru(guru)}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors"
                                 title={`Login sebagai ${guru.nama}`}
                               >
                                 <LogIn className="w-3 h-3" />
-                                <span>Login User</span>
+                                <span>Login as Guru</span>
                               </button>
                             )}
                             <button
@@ -1640,14 +1640,14 @@ export const PortalPage: React.FC = () => {
                       </td>
                       <td className="py-2.5 px-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {isSuperAdmin && (
+                          {(isSuperAdmin || isOperator) && (
                             <button
                               onClick={() => handleImpersonateGuru(guru)}
                               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors"
                               title={`Login sebagai ${guru.nama}`}
                             >
                               <LogIn className="w-3 h-3" />
-                              <span>Login User</span>
+                              <span>Login as Guru</span>
                             </button>
                           )}
                           <button

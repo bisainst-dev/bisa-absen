@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
 import { useProfilStore } from '../../stores/useProfilStore';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -7,14 +7,29 @@ import { syncEngine } from '../../services/sync/syncEngine';
 import type { SyncState } from '../../types/saas';
 import { AuthModal } from '../../features/auth/AuthModal';
 import { Badge } from '../ui/Badge';
-import { User, Cloud, CloudOff, RefreshCw, Building } from 'lucide-react';
+import { User, Cloud, CloudOff, RefreshCw, Building, GraduationCap } from 'lucide-react';
+import { DEMO_USERS, DEMO_TENANT } from '../../services/auth/authService';
 
 export const AppHeader: React.FC = () => {
-  const { profil } = useProfilStore();
-  const { user, isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
+  const { profil, saveProfil } = useProfilStore();
+  const { user, isAuthenticated, impersonateUser } = useAuthStore();
   const [syncState, setSyncState] = useState<SyncState>(syncEngine.getState());
   const [dirtyCount, setDirtyCount] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  const handleLoginAsGuru = () => {
+    const targetGuru = DEMO_USERS.guru;
+    saveProfil({
+      namaGuru: targetGuru.namaLengkap,
+      namaPanggilan: targetGuru.namaPanggilan,
+      sekolah: profil?.sekolah || DEMO_TENANT.namaSekolah,
+      nip: '198503152010011012',
+      isOnboarded: true,
+    });
+    impersonateUser(targetGuru);
+    navigate('/', { replace: true });
+  };
 
   useEffect(() => {
     const unsub = syncEngine.subscribe((state, count) => {
@@ -68,6 +83,19 @@ export const AppHeader: React.FC = () => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Tombol Cepat: Login As Guru (Bagi Admin / Operator / Kepsek) */}
+            {isAuthenticated && (user?.peran === 'superadmin' || user?.peran === 'operator' || user?.peran === 'kepsek') && (
+              <button
+                onClick={handleLoginAsGuru}
+                className="flex items-center gap-1.5 text-xs font-black text-slate-950 bg-amber-400 hover:bg-amber-500 border border-amber-500 px-2.5 py-1.5 rounded-xl transition-all shadow-sm active:scale-95"
+                title="Masuk sebagai akun Guru untuk mencoba fitur mengajar & absensi"
+              >
+                <GraduationCap className="w-3.5 h-3.5 text-slate-950" />
+                <span className="hidden xs:inline">Login as Guru</span>
+                <span className="xs:hidden">Guru</span>
+              </button>
+            )}
+
             {/* Tombol Pintas Portal Sekolah (Jika Peran Kepsek / Operator / Superadmin) */}
             {isAuthenticated && (user?.peran === 'kepsek' || user?.peran === 'operator' || user?.peran === 'superadmin') && (
               <Link
