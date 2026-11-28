@@ -1228,6 +1228,27 @@ export const PortalPage: React.FC = () => {
                 <Cloud className={`w-3.5 h-3.5 mr-1.5 ${dbSyncing ? 'animate-spin' : ''}`} />
                 {dbSyncing ? 'Sinkronisasi...' : 'Sinkronkan Sekarang'}
               </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  setDbSyncing(true);
+                  setDbSyncResult(null);
+                  const res = await syncEngine.syncAllForce();
+                  if (res.success) {
+                    setDbSyncResult(`Full Sync Berhasil! Seluruh ${res.pushed} data lokal diunggah dan ${res.pulled} data cloud ditarik.`);
+                  } else {
+                    setDbSyncResult(`Gagal Full Sync: ${res.error || 'Terjadi kesalahan'}`);
+                  }
+                  setDbSyncing(false);
+                }}
+                disabled={dbSyncing}
+                title="Unggah seluruh isi database lokal ke cloud dan tarik data cloud terbaru"
+              >
+                <Upload className="w-3.5 h-3.5 mr-1.5 text-teal-600" />
+                Unggah Semua (Full Sync)
+              </Button>
             </div>
           </div>
 

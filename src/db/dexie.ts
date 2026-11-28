@@ -92,6 +92,16 @@ export const genericRepo = {
     return await db.records.where('dirty').equals(1).toArray();
   },
 
+  async markAllDirty(): Promise<number> {
+    const all = await db.records.toArray();
+    await db.transaction('rw', db.records, async () => {
+      for (const rec of all) {
+        await db.records.update(rec.id, { dirty: 1 });
+      }
+    });
+    return all.length;
+  },
+
   async markSynced(ids: string[]): Promise<void> {
     if (ids.length === 0) return;
     await db.transaction('rw', db.records, async () => {

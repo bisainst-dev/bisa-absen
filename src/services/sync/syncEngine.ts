@@ -351,6 +351,26 @@ class SyncEngine {
       this.isSyncing = false;
     }
   }
+
+  /**
+   * Sinkronisasi penuh paksa (Full Sync):
+   * Menandai SEMUA data lokal sebagai kotor (dirty: 1) dan mengunggah semuanya ke cloud,
+   * serta menarik semua perubahan yang ada di cloud.
+   */
+  public async syncAllForce(): Promise<{
+    success: boolean;
+    pushed: number;
+    pulled: number;
+    isCloudConnected: boolean;
+    error?: string;
+  }> {
+    await genericRepo.markAllDirty();
+    this.lastSyncTime = 0;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('bisa_absen_last_sync_time');
+    }
+    return this.syncNow();
+  }
 }
 
 export const syncEngine = new SyncEngine();
