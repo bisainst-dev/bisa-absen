@@ -33,99 +33,51 @@ import {
   RefreshCw,
   Copy,
   Check,
-  ExternalLink,
   AlertCircle,
   Sparkles,
   Server,
 } from 'lucide-react';
-import {
-  getSupabaseConfig,
-  saveSupabaseConfig,
-  clearSupabaseConfig,
-  testSupabaseConnection,
-  isSupabaseConfigured,
-} from '../../lib/supabaseClient';
-import { syncEngine } from '../../services/sync/syncEngine';
+import { apiClient } from '../../lib/apiClient';
+import { genericRepo } from '../../db/dexie';
 
-const DATABASE_SQL_SCHEMA = `-- BISA ABSEN SAAS - POSTGRESQL & SUPABASE PRODUCTION SCHEMA
--- Tabel Tenants (Sekolah / Yayasan)
-CREATE TABLE IF NOT EXISTS public.tenants (
-  id VARCHAR(255) PRIMARY KEY,
-  nama_sekolah VARCHAR(255) NOT NULL,
-  npsn VARCHAR(50),
-  jenjang VARCHAR(50) DEFAULT 'SD',
-  alamat TEXT,
-  tier VARCHAR(50) NOT NULL DEFAULT 'school_starter',
-  kuota_guru INT NOT NULL DEFAULT 50,
-  kuota_siswa INT NOT NULL DEFAULT 1000,
-  langganan_aktif_sampai TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+const DATABASE_SQL_SCHEMA = `-- ==============================================================================
+-- DATABASE SCHEMA UNTUK AAPANEL (MYSQL / MARIADB)
+-- Import file ini lewat phpMyAdmin atau menu Database di aaPanel
+-- ==============================================================================
 
--- Tabel Profiles (Guru / Kepsek / Operator / Admin)
-CREATE TABLE IF NOT EXISTS public.profiles (
-  id VARCHAR(255) PRIMARY KEY,
-  tenant_id VARCHAR(255) REFERENCES public.tenants(id) ON DELETE SET NULL,
-  email VARCHAR(255) NOT NULL,
-  nama_lengkap VARCHAR(255) NOT NULL,
-  nama_panggilan VARCHAR(100),
-  nip VARCHAR(50),
-  peran VARCHAR(50) NOT NULL DEFAULT 'guru',
-  avatar_url TEXT,
-  telepon VARCHAR(30),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+CREATE DATABASE IF NOT EXISTS \`bisa_absen\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE \`bisa_absen\`;
 
--- Tabel Records (Sync Inti BISA Absen)
-CREATE TABLE IF NOT EXISTS public.records (
-  id VARCHAR(255) PRIMARY KEY,
-  tenant_id VARCHAR(255),
-  user_id VARCHAR(255),
-  kind VARCHAR(100) NOT NULL,
-  data JSONB NOT NULL DEFAULT '{}'::jsonb,
-  updated_at BIGINT NOT NULL,
-  deleted SMALLINT NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- Tabel Records: Penyimpanan terpusat seluruh data absensi, jadwal, siswa, dll
+CREATE TABLE IF NOT EXISTS \`records\` (
+  \`id\` VARCHAR(255) NOT NULL,
+  \`tenant_id\` VARCHAR(255) NULL DEFAULT 'tenant-demo-smpn2',
+  \`user_id\` VARCHAR(255) NULL DEFAULT 'usr-guru-budi',
+  \`kind\` VARCHAR(100) NOT NULL,
+  \`data\` LONGTEXT NOT NULL,
+  \`updated_at\` BIGINT NOT NULL,
+  \`deleted\` TINYINT(1) NOT NULL DEFAULT 0,
+  \`created_at\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (\`id\`),
+  INDEX \`idx_records_kind_del\` (\`kind\`, \`deleted\`),
+  INDEX \`idx_records_tenant\` (\`tenant_id\`),
+  INDEX \`idx_records_user\` (\`user_id\`),
+  INDEX \`idx_records_updated\` (\`updated_at\` DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Index Performa Tinggi
-CREATE INDEX IF NOT EXISTS idx_records_tenant_kind ON public.records(tenant_id, kind);
-CREATE INDEX IF NOT EXISTS idx_records_updated_at ON public.records(updated_at DESC);
-CREATE INDEX IF NOT EXISTS idx_records_kind_deleted ON public.records(kind, deleted);
-
--- RLS & Public Access
-ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.records ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "tenants_public_access" ON public.tenants;
-CREATE POLICY "tenants_public_access" ON public.tenants FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "profiles_public_access" ON public.profiles;
-CREATE POLICY "profiles_public_access" ON public.profiles FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "records_public_access" ON public.records;
-CREATE POLICY "records_public_access" ON public.records FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
-
--- Realtime Replication
-DO $$ BEGIN
-  ALTER PUBLICATION supabase_realtime ADD TABLE public.records;
-EXCEPTION WHEN OTHERS THEN NULL; END $$;
-
--- Data Awal Sekolah & Akun
-INSERT INTO public.tenants (id, nama_sekolah, npsn, jenjang)
-VALUES ('tenant-demo-smpn2', 'SMP Negeri 2 Tanjung', '20104050', 'SMP')
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO public.profiles (id, tenant_id, email, nama_lengkap, nama_panggilan, peran)
-VALUES 
-  ('usr-admin-bisa', 'tenant-demo-smpn2', 'admin@sekolah.sch.id', 'Administrator Utama Esduta Gate', 'Admin Pusat', 'superadmin'),
-  ('usr-guru-budi', 'tenant-demo-smpn2', 'budi.santoso@sekolah.sch.id', 'Budi Santoso, S.Pd.', 'Pak Budi', 'guru'),
-  ('usr-ops-hendra', 'tenant-demo-smpn2', 'operator@sekolah.sch.id', 'Hendra Gunawan, S.Kom.', 'Pak Hendra', 'operator'),
-  ('usr-kepsek-siti', 'tenant-demo-smpn2', 'kepsek@sekolah.sch.id', 'Dr. Hj. Siti Fatimah, M.Pd.', 'Bu Siti', 'kepsek')
-ON CONFLICT (id) DO NOTHING;`;
+-- Tabel Tenants (Sekolah / Lembaga)
+CREATE TABLE IF NOT EXISTS \`tenants\` (
+  \`id\` VARCHAR(255) NOT NULL,
+  \`nama_sekolah\` VARCHAR(255) NOT NULL,
+  \`npsn\` VARCHAR(50) NULL,
+  \`jenjang\` VARCHAR(50) DEFAULT 'SMP',
+  \`alamat\` TEXT NULL,
+  \`tier\` VARCHAR(50) NOT NULL DEFAULT 'school_starter',
+  \`kuota_guru\` INT NOT NULL DEFAULT 50,
+  \`kuota_siswa\` INT NOT NULL DEFAULT 1000,
+  \`created_at\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (\`id\`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
 
 export const PortalPage: React.FC = () => {
   const navigate = useNavigate();
@@ -190,20 +142,18 @@ export const PortalPage: React.FC = () => {
     ? 'operator'
     : activeTab;
 
-  // State Konfigurasi Database Cloud (Supabase / Vercel)
-  const [dbConfig, setDbConfig] = useState(getSupabaseConfig());
-  const [inputDbUrl, setInputDbUrl] = useState(dbConfig.url);
-  const [inputDbKey, setInputDbKey] = useState(dbConfig.anonKey);
+  // State Konfigurasi Database Server (MySQL / aaPanel)
   const [dbTesting, setDbTesting] = useState(false);
   const [dbTestResult, setDbTestResult] = useState<{
-    success: boolean;
-    message: string;
-    tableReady?: boolean;
-    recordCount?: number;
+    status: string;
+    server?: string;
+    database?: string;
+    mysqlConnected?: boolean;
+    error?: string;
   } | null>(null);
   const [dbCopied, setDbCopied] = useState(false);
-  const [dbSyncing, setDbSyncing] = useState(false);
-  const [dbSyncResult, setDbSyncResult] = useState<string | null>(null);
+  const [dbMigrating, setDbMigrating] = useState(false);
+  const [dbMigrateResult, setDbMigrateResult] = useState<string | null>(null);
 
   // State Simulasi Modal Pembayaran QRIS (Superadmin)
   const [showPaymentModal, setShowPaymentModal] = useState<string | null>(null);
@@ -1166,7 +1116,7 @@ export const PortalPage: React.FC = () => {
       )}
 
       {/* =========================================================================
-          TAB 4: STATUS & PENGATURAN DATABASE CLOUD (VERCEL & SUPABASE)
+          TAB 4: STATUS & PENGATURAN DATABASE SERVER (AAPANEL / MYSQL)
       ========================================================================= */}
       {(isSuperAdmin || isOperator) && effectiveTab === 'database' && (
         <div className="space-y-6">
@@ -1179,14 +1129,14 @@ export const PortalPage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                    Pusat Database Cloud Terpadu (Direct Supabase)
+                    Pusat Database Server aaPanel & MySQL
                   </h3>
-                  <Badge variant={isSupabaseConfigured() ? 'success' : 'warning'}>
-                    {isSupabaseConfigured() ? 'Database Cloud Aktif' : 'Mode Offline Lokal'}
+                  <Badge variant={dbTestResult?.mysqlConnected ? 'success' : 'neutral'}>
+                    {dbTestResult?.mysqlConnected ? 'MySQL Terhubung' : 'Server Online'}
                   </Badge>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Aplikasi terhubung langsung ke database Supabase / PostgreSQL. Setiap input jadwal, siswa, dan absensi langsung tersimpan ke cloud dan langsung terbaca di semua browser tanpa sistem hybrid.
+                  Aplikasi terhubung langsung ke backend server & database MySQL di VPS aaPanel Anda. Seluruh browser, laptop, dan HP membaca database yang sama.
                 </p>
               </div>
             </div>
@@ -1198,50 +1148,65 @@ export const PortalPage: React.FC = () => {
                 onClick={async () => {
                   setDbTesting(true);
                   setDbTestResult(null);
-                  const res = await testSupabaseConnection();
+                  const res = await apiClient.checkHealth();
                   setDbTestResult(res);
                   setDbTesting(false);
                 }}
                 disabled={dbTesting}
               >
                 <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${dbTesting ? 'animate-spin' : ''}`} />
-                {dbTesting ? 'Menguji...' : 'Uji Koneksi DB'}
+                {dbTesting ? 'Memeriksa...' : 'Cek Status Server & DB'}
               </Button>
 
               <Button
                 variant="primary"
                 size="sm"
                 onClick={async () => {
-                  setDbSyncing(true);
-                  setDbSyncResult(null);
-                  const res = await syncEngine.syncAllForce();
-                  if (res.success) {
-                    setDbSyncResult(`Migrasi Berhasil! Seluruh ${res.pushed} data lokal berhasil diunggah ke Supabase Cloud.`);
-                  } else {
-                    setDbSyncResult(`Gagal Migrasi: ${res.error || 'Terjadi kesalahan'}`);
+                  setDbMigrating(true);
+                  setDbMigrateResult(null);
+                  try {
+                    const allRecords = await genericRepo.exportAll();
+                    if (allRecords.length === 0) {
+                      setDbMigrateResult('Tidak ada data lokal yang perlu diunggah.');
+                      return;
+                    }
+                    const res = await fetch('/api/records/bulk', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ records: allRecords }),
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      setDbMigrateResult(`Sukses! ${data.count || allRecords.length} data lokal berhasil diunggah ke MySQL aaPanel.`);
+                    } else {
+                      setDbMigrateResult('Gagal mengunggah data ke server aaPanel.');
+                    }
+                  } catch (e: unknown) {
+                    setDbMigrateResult(`Gagal: ${e instanceof Error ? e.message : 'Koneksi error'}`);
+                  } finally {
+                    setDbMigrating(false);
                   }
-                  setDbSyncing(false);
                 }}
-                disabled={dbSyncing}
-                title="Unggah seluruh data lokal yang pernah ada ke database cloud Supabase"
+                disabled={dbMigrating}
+                title="Unggah seluruh data lokal dari browser ini ke database server MySQL aaPanel"
               >
                 <Upload className="w-3.5 h-3.5 mr-1.5" />
-                Unggah Data Lokal ke Cloud
+                {dbMigrating ? 'Mengunggah...' : 'Unggah Data Lokal ke MySQL'}
               </Button>
             </div>
           </div>
 
-          {/* Alert Hasil Uji / Sinkronisasi */}
+          {/* Alert Hasil Uji Koneksi Server */}
           {dbTestResult && (
             <div
               className={`p-4 rounded-2xl border text-sm flex items-start gap-3 ${
-                dbTestResult.success
+                dbTestResult.status === 'ok'
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
                   : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
               }`}
             >
               <div className="mt-0.5 shrink-0">
-                {dbTestResult.success ? (
+                {dbTestResult.status === 'ok' ? (
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                 ) : (
                   <AlertCircle className="w-5 h-5 text-amber-600" />
@@ -1249,132 +1214,85 @@ export const PortalPage: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <span className="font-extrabold block">
-                  {dbTestResult.success ? 'Koneksi Berhasil' : 'Perhatian Koneksi'}
+                  {dbTestResult.status === 'ok' ? 'Server aaPanel Terhubung!' : 'Server Belum Terjangkau'}
                 </span>
-                <p className="text-xs">{dbTestResult.message}</p>
+                <p className="text-xs">
+                  {dbTestResult.status === 'ok'
+                    ? `Backend: ${dbTestResult.server || 'Express Node.js'} | Database: ${dbTestResult.database || 'MySQL'} (${dbTestResult.mysqlConnected ? 'Koneksi MySQL Aktif' : 'Penyimpanan File Aktif'})`
+                    : `Gagal menghubungi server: ${dbTestResult.error || 'Pastikan node server.js sudah dijalankan di aaPanel.'}`}
+                </p>
               </div>
             </div>
           )}
 
-          {dbSyncResult && (
+          {dbMigrateResult && (
             <div className="p-4 rounded-2xl border bg-brand-50 dark:bg-brand-950/40 border-brand-200 dark:border-brand-800 text-brand-900 dark:text-brand-200 text-xs flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-brand-600 shrink-0" />
-              <span>{dbSyncResult}</span>
+              <span>{dbMigrateResult}</span>
             </div>
           )}
 
-          {/* Grid: Form Koneksi & Status Arsitektur */}
+          {/* Grid: Panduan aaPanel & Skrip SQL Schema MySQL */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {/* Card 1: Formulir Pengaturan Supabase */}
+            {/* Card 1: Panduan Deployment aaPanel */}
             <Card className="p-5 space-y-4">
               <div className="flex items-center justify-between border-b pb-3">
                 <div className="flex items-center gap-2">
                   <Server className="w-4 h-4 text-brand-600" />
                   <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                    Konfigurasi Endpoint Supabase
+                    Panduan Submit & Deploy di aaPanel
                   </h4>
                 </div>
-                {dbConfig.source !== 'none' && (
-                  <Badge variant="neutral" className="text-[10px]">
-                    Sumber: {dbConfig.source === 'env' ? 'Vercel Env' : 'Tersimpan di Browser'}
-                  </Badge>
-                )}
+                <Badge variant="brand" className="text-[10px]">
+                  aaPanel Ready
+                </Badge>
               </div>
 
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Project URL Supabase
-                  </label>
-                  <Input
-                    placeholder="https://xyzabcdefghijklm.supabase.co"
-                    value={inputDbUrl}
-                    onChange={(e) => setInputDbUrl(e.target.value)}
-                    className="font-mono text-xs"
-                  />
-                  <p className="text-[11px] text-slate-400">
-                    Dapatkan dari Dashboard Supabase &gt; Project Settings &gt; API &gt; Project URL
-                  </p>
+              <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+                  <strong className="text-slate-900 dark:text-white block font-bold">
+                    Langkah 1: Buat Database MySQL di aaPanel
+                  </strong>
+                  <p>Buka menu <strong>Database</strong> di aaPanel &gt; klik <strong>Add Database</strong> (contoh Nama: <code>bisa_absen</code>). Simpan nama user dan password database.</p>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Project API Key (anon / public)
-                  </label>
-                  <Input
-                    type="password"
-                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    value={inputDbKey}
-                    onChange={(e) => setInputDbKey(e.target.value)}
-                    className="font-mono text-xs"
-                  />
-                  <p className="text-[11px] text-slate-400">
-                    Dapatkan dari Dashboard Supabase &gt; Project Settings &gt; API &gt; Project API keys (anon public)
-                  </p>
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+                  <strong className="text-slate-900 dark:text-white block font-bold">
+                    Langkah 2: Buat File .env
+                  </strong>
+                  <p>Di folder aplikasi pada server aaPanel, buat file <code>.env</code>:</p>
+                  <pre className="p-2 bg-slate-900 text-teal-300 rounded font-mono text-[10px] overflow-x-auto mt-1">
+{`PORT=3000
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=bisa_absen
+DB_PASSWORD=password_database_anda
+DB_NAME=bisa_absen`}
+                  </pre>
                 </div>
 
-                <div className="pt-2 flex flex-wrap items-center gap-2">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => {
-                      if (!inputDbUrl.trim() || !inputDbKey.trim()) {
-                        alert('Silakan masukkan Project URL dan Anon Key Supabase terlebih dahulu.');
-                        return;
-                      }
-                      saveSupabaseConfig(inputDbUrl, inputDbKey);
-                      setDbConfig(getSupabaseConfig());
-                      syncEngine.setupRealtimeSubscription();
-                      alert('Konfigurasi database cloud berhasil disimpan! Menguji koneksi...');
-                      testSupabaseConnection().then(setDbTestResult);
-                    }}
-                  >
-                    Simpan & Hubungkan Database
-                  </Button>
-
-                  {dbConfig.source === 'custom' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (confirm('Apakah Anda yakin ingin memutuskan database dan kembali ke mode offline lokal?')) {
-                          clearSupabaseConfig();
-                          setDbConfig(getSupabaseConfig());
-                          setInputDbUrl('');
-                          setInputDbKey('');
-                          setDbTestResult(null);
-                        }
-                      }}
-                    >
-                      Putuskan Database
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Panduan Deployment Vercel Permanen */}
-              <div className="mt-4 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
-                <span className="font-extrabold text-slate-900 dark:text-white block">
-                  💡 Tips Pemasangan Permanen di Vercel:
-                </span>
-                <p>
-                  Agar semua guru dan perangkat langsung terhubung otomatis tanpa input manual, pasang dua variabel berikut di <strong>Vercel Dashboard &gt; Settings &gt; Environment Variables</strong>:
-                </p>
-                <div className="p-2 rounded bg-slate-900 text-teal-400 font-mono text-[11px] space-y-0.5">
-                  <div>VITE_SUPABASE_URL = {inputDbUrl || 'https://your-id.supabase.co'}</div>
-                  <div>VITE_SUPABASE_ANON_KEY = {inputDbKey ? inputDbKey.slice(0, 20) + '...' : 'anon-key...'}</div>
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+                  <strong className="text-slate-900 dark:text-white block font-bold">
+                    Langkah 3: Jalankan di aaPanel Node Project Manager
+                  </strong>
+                  <p>Buka menu <strong>Node Project</strong> di aaPanel &gt; <strong>Add Node Project</strong>:</p>
+                  <ul className="list-disc list-inside mt-1 space-y-0.5 text-[11px]">
+                    <li>Run opt: <code>server.js</code> atau <code>npm start</code></li>
+                    <li>Port: <code>3000</code></li>
+                    <li>Domain: Masukkan domain/subdomain Anda (otomatis di-reverse proxy oleh aaPanel)</li>
+                  </ul>
                 </div>
               </div>
             </Card>
 
-            {/* Card 2: Skrip SQL Schema Supabase / Vercel */}
+            {/* Card 2: Skrip SQL Schema MySQL aaPanel */}
             <Card className="p-5 space-y-4 flex flex-col justify-between">
               <div className="space-y-3">
                 <div className="flex items-center justify-between border-b pb-3">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-teal-600" />
+                    <Database className="w-4 h-4 text-teal-600" />
                     <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                      Skrip SQL Schema Database (1-Click Run)
+                      Skrip SQL Schema MySQL (aaPanel)
                     </h4>
                   </div>
                   <Button
@@ -1395,14 +1313,14 @@ export const PortalPage: React.FC = () => {
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5 mr-1" />
-                        Salin SQL Schema
+                        Salin SQL MySQL
                       </>
                     )}
                   </Button>
                 </div>
 
                 <p className="text-xs text-slate-500">
-                  Jalankan skrip ini sekali di <strong>Supabase SQL Editor</strong> atau <strong>Vercel Postgres Query Console</strong> untuk membuat tabel <code>tenants</code>, <code>profiles</code>, dan <code>records</code> beserta hak akses realtime.
+                  Import skrip ini lewat <strong>phpMyAdmin</strong> di aaPanel atau biarkan <code>server.js</code> membuatnya secara otomatis saat pertama kali dijalankan.
                 </p>
 
                 <div className="relative">
@@ -1413,16 +1331,8 @@ export const PortalPage: React.FC = () => {
               </div>
 
               <div className="pt-2 border-t flex items-center justify-between text-xs text-slate-500">
-                <span>Tabel siap sync: tenants, profiles, records</span>
-                <a
-                  href="https://supabase.com/dashboard"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-brand-600 hover:underline flex items-center gap-1 font-bold"
-                >
-                  Buka Supabase Dashboard
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+                <span>Tabel MySQL: records, tenants</span>
+                <span className="font-semibold text-teal-600 dark:text-teal-400">Tersimpan di: database/schema_mysql.sql</span>
               </div>
             </Card>
           </div>

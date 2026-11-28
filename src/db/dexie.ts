@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type { GenericRecord } from '../types/database';
-import { getSupabase } from '../lib/supabaseClient';
+import { apiClient } from '../lib/apiClient';
 import { useAuthStore } from '../stores/useAuthStore';
 
 export class BisaAbsenDB extends Dexie {
@@ -36,50 +36,26 @@ export function notifyDBChange(): void {
 
 /**
  * Repository generik untuk tabel records.
- * Direct Cloud First: Jika Supabase terhubung, baca & tulis langsung ke Supabase Cloud
- * sehingga seluruh browser dan perangkat selalu memiliki data yang 100% sama seketika.
+ * Direct Server Database (aaPanel / MySQL / REST API):
+ * Setiap baca & tulis langsung terhubung ke server backend / MySQL aaPanel.
+ * Seluruh browser dan perangkat melihat data yang 100% sama seketika.
  * Dexie tetap diperbarui di latar belakang sebagai cache lokal cepat & fallback saat offline.
  */
 export const genericRepo = {
   async findByKind<T>(kind: string, includeDeleted = false): Promise<GenericRecord<T>[]> {
-    const supabase = getSupabase();
-    if (supabase) {
+    const auth = useAuthStore.getState();
+    const tenantId = auth.tenant?.id || auth.user?.tenantId || 'tenant-demo-smpn2';
+
+    // 1. Ambil data langsung dari Database Server aaPanel / MySQL
+    const serverRecords = await apiClient.getRecords<T>(kind, includeDeleted, tenantId);
+    if (serverRecords) {
       try {
-        const auth = useAuthStore.getState();
-        const tenantId = auth.tenant?.id || auth.user?.tenantId || 'tenant-demo-smpn2';
-
-        let q = supabase.from('records').select('*').eq('kind', kind);
-        if (!includeDeleted) {
-          q = q.eq('deleted', 0);
-        }
-        if (tenantId) {
-          q = q.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
-        }
-
-        const { data, error } = await q.order('updated_at', { ascending: false });
-        if (!error && data) {
-          const cloudRecords: GenericRecord<T>[] = data.map((row) => ({
-            id: row.id,
-            kind: row.kind,
-            data: row.data as T,
-            updatedAt: Number(row.updated_at),
-            deleted: (row.deleted ?? 0) as 0 | 1,
-            dirty: 0,
-          }));
-
-          // Sinkronkan ke cache Dexie di latar belakang
-          try {
-            await db.records.bulkPut(cloudRecords as GenericRecord[]);
-          } catch {}
-
-          return cloudRecords;
-        }
-      } catch (err) {
-        console.warn('[genericRepo] Gagal query cloud Supabase, beralih ke cache lokal:', err);
-      }
+        await db.records.bulkPut(serverRecords as GenericRecord[]);
+      } catch {}
+      return serverRecords;
     }
 
-    // Fallback ke cache Dexie lokal
+    // 2. Fallback ke Dexie jika server belum dijalankan / saat offline / unit test
     let collection = db.records.where('kind').equals(kind);
     if (!includeDeleted) {
       collection = collection.filter((r) => r.deleted === 0);
@@ -98,27 +74,12 @@ export const genericRepo = {
   },
 
   async getById<T>(id: string): Promise<GenericRecord<T> | undefined> {
-    const supabase = getSupabase();
-    if (supabase) {
+    const serverRec = await apiClient.getRecordById<T>(id);
+    if (serverRec) {
       try {
-        const { data, error } = await supabase.from('records').select('*').eq('id', id).maybeSingle();
-        if (!error && data) {
-          const cloudRec: GenericRecord<T> = {
-            id: data.id,
-            kind: data.kind,
-            data: data.data as T,
-            updatedAt: Number(data.updated_at),
-            deleted: (data.deleted ?? 0) as 0 | 1,
-            dirty: 0,
-          };
-          try {
-            await db.records.put(cloudRec as GenericRecord);
-          } catch {}
-          return cloudRec;
-        }
-      } catch (err) {
-        console.warn('[genericRepo] Gagal getById dari Supabase:', err);
-      }
+        await db.records.put(serverRec as GenericRecord);
+      } catch {}
+      return serverRec;
     }
 
     const rec = await db.records.get(id);
@@ -147,30 +108,24 @@ export const genericRepo = {
       await db.records.put(record as GenericRecord);
     } catch {}
 
-    // 2. Simpan LANGSUNG ke Database Cloud Supabase
-    const supabase = getSupabase();
-    if (supabase) {
-      try {
-        const auth = useAuthStore.getState();
-        const tenantId = auth.tenant?.id || auth.user?.tenantId || 'tenant-demo-smpn2';
-        const userId = auth.user?.id || 'usr-guru-budi';
+    // 2. Simpan LANGSUNG ke Database Server aaPanel
+    const auth = useAuthStore.getState();
+    const tenantId = auth.tenant?.id || auth.user?.tenantId || 'tenant-demo-smpn2';
+    const userId = auth.user?.id || 'usr-guru-budi';
 
-        await supabase.from('records').upsert(
-          {
-            id,
-            tenant_id: tenantId,
-            user_id: userId,
-            kind,
-            data: data as Record<string, unknown>,
-            updated_at: now,
-            deleted: record.deleted,
-          },
-          { onConflict: 'id' }
-        );
-      } catch (err) {
-        console.warn('[genericRepo] Gagal langsung menulis ke Supabase:', err);
-      }
-    }
+    apiClient
+      .saveRecord({
+        id,
+        kind,
+        data,
+        updatedAt: now,
+        deleted: record.deleted,
+        tenantId,
+        userId,
+      })
+      .catch((err) => {
+        console.warn('[genericRepo] Gagal menyimpan ke server backend aaPanel:', err);
+      });
 
     notifyDBChange();
     return record;
@@ -187,63 +142,24 @@ export const genericRepo = {
       });
     }
 
-    // Direct Cloud Update ke Supabase
-    const supabase = getSupabase();
-    if (supabase) {
-      try {
-        await supabase
-          .from('records')
-          .update({
-            deleted: 1,
-            updated_at: now,
-          })
-          .eq('id', id);
-      } catch (err) {
-        console.warn('[genericRepo] Gagal softDelete di Supabase:', err);
-      }
-    }
-
+    // Direct Delete ke server aaPanel
+    apiClient.deleteRecord(id, true).catch(() => {});
     notifyDBChange();
   },
 
   async hardDelete(id: string): Promise<void> {
     await db.records.delete(id);
-
-    // Direct Cloud Delete di Supabase
-    const supabase = getSupabase();
-    if (supabase) {
-      try {
-        await supabase.from('records').delete().eq('id', id);
-      } catch (err) {
-        console.warn('[genericRepo] Gagal hardDelete di Supabase:', err);
-      }
-    }
-
+    apiClient.deleteRecord(id, false).catch(() => {});
     notifyDBChange();
   },
 
   async countByKind(kind: string): Promise<number> {
-    const supabase = getSupabase();
-    if (supabase) {
-      try {
-        const auth = useAuthStore.getState();
-        const tenantId = auth.tenant?.id || auth.user?.tenantId || 'tenant-demo-smpn2';
+    const auth = useAuthStore.getState();
+    const tenantId = auth.tenant?.id || auth.user?.tenantId || 'tenant-demo-smpn2';
 
-        let q = supabase
-          .from('records')
-          .select('*', { count: 'exact', head: true })
-          .eq('kind', kind)
-          .eq('deleted', 0);
-
-        if (tenantId) {
-          q = q.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
-        }
-
-        const { count, error } = await q;
-        if (!error && typeof count === 'number') {
-          return count;
-        }
-      } catch {}
+    const serverCount = await apiClient.countRecords(kind, tenantId);
+    if (typeof serverCount === 'number') {
+      return serverCount;
     }
 
     return await db.records

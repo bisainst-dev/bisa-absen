@@ -5,9 +5,8 @@ import { useProfilStore } from '../../stores/useProfilStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { AuthModal } from '../../features/auth/AuthModal';
 import { Badge } from '../ui/Badge';
-import { User, Cloud, CloudOff, Building, GraduationCap } from 'lucide-react';
+import { User, Database, Building, GraduationCap } from 'lucide-react';
 import { DEMO_USERS, DEMO_TENANT } from '../../services/auth/authService';
-import { isSupabaseConfigured } from '../../lib/supabaseClient';
 
 export const AppHeader: React.FC = () => {
   const navigate = useNavigate();
@@ -88,25 +87,15 @@ export const AppHeader: React.FC = () => {
               </Link>
             )}
 
-            {/* Direct Cloud Database Indicator */}
-            {isSupabaseConfigured() ? (
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all border bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60"
-                title="Database Cloud Supabase Terhubung - Seluruh data langsung disimpan dan terbaca secara realtime di semua browser."
-              >
-                <Cloud className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span className="hidden sm:inline">Cloud DB</span>
-              </div>
-            ) : (
-              <Link
-                to="/portal"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all border bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400"
-                title="Database Cloud belum dikonfigurasi. Klik untuk memasang Supabase di Portal."
-              >
-                <CloudOff className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                <span className="hidden sm:inline">Offline</span>
-              </Link>
-            )}
+            {/* Server Database Indicator */}
+            <Link
+              to="/portal"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all border bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:border-emerald-500"
+              title="Database Server Terhubung - Data langsung tersimpan di MySQL/aaPanel"
+            >
+              <Database className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden sm:inline">Database DB</span>
+            </Link>
 
             {profil?.tahunPelajaran && (
               <div className="hidden md:flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 px-3 py-1.5 rounded-full">
