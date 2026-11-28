@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/Badge';
 import { jadwalRepo } from './jadwalRepository';
 import { kelasRepo } from '../siswa/kelasRepository';
 import { useProfilStore } from '../../stores/useProfilStore';
+import { syncEngine } from '../../services/sync/syncEngine';
 import { NAMA_HARI, type JadwalData } from './jadwalSchema';
 import type { KelasData } from '../siswa/kelasSchema';
 import {
@@ -89,6 +90,14 @@ export const JadwalPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    // Berlangganan ke update SyncEngine (saat data ditarik dari Cloud / Realtime)
+    const unsub = syncEngine.subscribe((state) => {
+      if (state === 'synced' || state === 'idle') {
+        loadData();
+      }
+    });
+    return unsub;
   }, [profil]);
 
   const kelasMap = useMemo(() => {
@@ -133,6 +142,7 @@ export const JadwalPage: React.FC = () => {
       await loadData();
       setShowAddModal(false);
       showToast(`Jadwal hari ${NAMA_HARI[formHari]} berhasil ditambahkan`);
+      syncEngine.syncNow().catch(() => {});
     } catch (err: unknown) {
       alert((err as Error).message || 'Gagal menyimpan jadwal');
     }
@@ -169,6 +179,7 @@ export const JadwalPage: React.FC = () => {
       await loadData();
       setShowEditModal(false);
       showToast('Perubahan jadwal berhasil disimpan');
+      syncEngine.syncNow().catch(() => {});
     } catch (err: unknown) {
       alert((err as Error).message || 'Gagal mengubah jadwal');
     }
@@ -186,6 +197,7 @@ export const JadwalPage: React.FC = () => {
       await loadData();
       setShowDeleteModal(false);
       showToast('Jadwal berhasil dihapus');
+      syncEngine.syncNow().catch(() => {});
     } catch (err: unknown) {
       alert((err as Error).message || 'Gagal menghapus jadwal');
     }
@@ -221,6 +233,7 @@ export const JadwalPage: React.FC = () => {
           .map((h) => NAMA_HARI[h])
           .join(', ')}`
       );
+      syncEngine.syncNow().catch(() => {});
     } catch (err: unknown) {
       alert((err as Error).message || 'Gagal menyalin jadwal');
     }

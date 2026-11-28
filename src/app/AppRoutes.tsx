@@ -18,6 +18,7 @@ import { LoginPage } from '../features/auth/LoginPage';
 import { useProfilStore } from '../stores/useProfilStore';
 import { useThemeStore } from '../stores/useThemeStore';
 import { useAuthStore } from '../stores/useAuthStore';
+import { syncEngine } from '../services/sync/syncEngine';
 
 // Komponen Pembatas Hak Akses Berdasarkan Level Akun (RBAC)
 const RoleGuard: React.FC<{
@@ -57,6 +58,36 @@ export const AppRoutes: React.FC = () => {
     initTheme();
     loadProfil();
   }, [initTheme, loadProfil]);
+
+  // Otomatis sinkronisasi data cloud saat pengguna login / membuka aplikasi
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // 1. Eksekusi sync langsung saat startup / reload
+    syncEngine.syncNow().catch((err) => {
+      console.warn('[AppRoutes] Auto-sync on startup failed:', err);
+    });
+
+    // 2. Sinkronisasi berkala setiap 30 detik saat online
+    const interval = setInterval(() => {
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        syncEngine.syncNow().catch(() => {});
+      }
+    }, 30000);
+
+    // 3. Sinkronisasi saat tab aktif kembali (user berpindah browser / tab)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && typeof navigator !== 'undefined' && navigator.onLine) {
+        syncEngine.syncNow().catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAuthenticated]);
 
   if (loading && !hasLoaded) {
     return (

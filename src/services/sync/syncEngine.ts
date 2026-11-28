@@ -1,4 +1,4 @@
-import { genericRepo } from '../../db/dexie';
+import { genericRepo, onDBChange } from '../../db/dexie';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { getSupabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import type { SyncState, SyncPushResponse, SyncPullResponse } from '../../types/saas';
@@ -12,6 +12,7 @@ class SyncEngine {
   private isSyncing = false;
   private realtimeChannel: RealtimeChannel | null = null;
   private inMemoryCloudCache: Record<string, GenericRecord> = {};
+  private autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     if (typeof localStorage !== 'undefined') {
@@ -31,6 +32,29 @@ class SyncEngine {
 
     // Inisialisasi Realtime jika Supabase sudah terkonfigurasi
     this.setupRealtimeSubscription();
+
+    // Auto-sync listener setiap ada perubahan data lokal di Dexie
+    onDBChange(() => {
+      this.triggerDebouncedSync(1200);
+    });
+  }
+
+  /**
+   * Memicu sinkronisasi cloud otomatis secara debounce saat data lokal berubah
+   */
+  public triggerDebouncedSync(delayMs = 1200): void {
+    if (typeof window === 'undefined') return;
+    if (this.autoSyncTimer) {
+      clearTimeout(this.autoSyncTimer);
+    }
+    this.autoSyncTimer = setTimeout(() => {
+      const auth = useAuthStore.getState();
+      if (auth.isAuthenticated && navigator.onLine) {
+        this.syncNow().catch((err) => {
+          console.warn('[SyncEngine] Auto-sync debounced failed:', err);
+        });
+      }
+    }, delayMs);
   }
 
   public setupRealtimeSubscription(): void {
@@ -183,11 +207,13 @@ class SyncEngine {
     if (supabase) {
       const auth = useAuthStore.getState();
       const tenantId = auth.tenant?.id || auth.user?.tenantId || 'tenant-demo-smpn2';
+      // Berikan toleransi 5 detik untuk mengantisipasi perbedaan jam perangkat (clock skew)
+      const effectiveSince = Math.max(0, sinceTimestamp - 5000);
 
       let query = supabase
         .from('records')
         .select('*')
-        .gt('updated_at', sinceTimestamp);
+        .gt('updated_at', effectiveSince);
 
       if (tenantId) {
         query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
@@ -370,6 +396,47 @@ class SyncEngine {
       localStorage.removeItem('bisa_absen_last_sync_time');
     }
     return this.syncNow();
+  }
+
+  /**
+   * Tarik paksa SEMUA data dari cloud tanpa mengunggah data lokal (Force Pull)
+   */
+  public async pullAllForce(): Promise<{
+    success: boolean;
+    pulled: number;
+    isCloudConnected: boolean;
+    error?: string;
+  }> {
+    this.lastSyncTime = 0;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('bisa_absen_last_sync_time');
+    }
+    const isCloudConnected = isSupabaseConfigured();
+    try {
+      this.state = 'syncing';
+      await this.notify();
+      const pullRes = await this.callCloudApiPull(0);
+      let pulled = 0;
+      if (pullRes.success && pullRes.changes.length > 0) {
+        pulled = await genericRepo.upsertFromCloud(pullRes.changes);
+      }
+      this.lastSyncTime = Date.now();
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('bisa_absen_last_sync_time', String(this.lastSyncTime));
+      }
+      this.state = 'synced';
+      await this.notify();
+      return { success: true, pulled, isCloudConnected };
+    } catch (err: unknown) {
+      this.state = 'error';
+      await this.notify();
+      return {
+        success: false,
+        pulled: 0,
+        isCloudConnected,
+        error: err instanceof Error ? err.message : 'Gagal menarik data cloud',
+      };
+    }
   }
 }
 

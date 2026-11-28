@@ -1249,6 +1249,27 @@ export const PortalPage: React.FC = () => {
                 <Upload className="w-3.5 h-3.5 mr-1.5 text-teal-600" />
                 Unggah Semua (Full Sync)
               </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  setDbSyncing(true);
+                  setDbSyncResult(null);
+                  const res = await syncEngine.pullAllForce();
+                  if (res.success) {
+                    setDbSyncResult(`Tarik Data Berhasil! ${res.pulled} data cloud berhasil diunduh ke browser ini.`);
+                  } else {
+                    setDbSyncResult(`Gagal Menarik Data: ${res.error || 'Terjadi kesalahan'}`);
+                  }
+                  setDbSyncing(false);
+                }}
+                disabled={dbSyncing}
+                title="Tarik seluruh data dari cloud Supabase ke browser ini"
+              >
+                <Download className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
+                Tarik Semua (Force Pull)
+              </Button>
             </div>
           </div>
 

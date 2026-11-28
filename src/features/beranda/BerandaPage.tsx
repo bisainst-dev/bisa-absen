@@ -10,6 +10,7 @@ import { jadwalRepo } from '../jadwal/jadwalRepository';
 import { kelasRepo } from '../siswa/kelasRepository';
 import { catatanRepo } from '../catatan/catatanRepository';
 import { reminderService, type MissedReminder } from '../../services/reminder/reminderService';
+import { syncEngine } from '../../services/sync/syncEngine';
 import type { JadwalData } from '../jadwal/jadwalSchema';
 import type { KelasData } from '../siswa/kelasSchema';
 import {
@@ -63,6 +64,14 @@ export const BerandaPage: React.FC = () => {
       }
     }
     loadDashboardData();
+
+    // Subscribe ke sinkronisasi Cloud agar beranda langsung update jika jadwal ditarik dari browser lain
+    const unsub = syncEngine.subscribe((state) => {
+      if (state === 'synced' || state === 'idle') {
+        loadDashboardData();
+      }
+    });
+    return unsub;
   }, [todayDayIndex]);
 
   const hariIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][dayOfWeek];

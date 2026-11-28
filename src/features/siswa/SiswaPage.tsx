@@ -5,6 +5,7 @@ import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { kelasRepo } from './kelasRepository';
 import { siswaRepo } from './siswaRepository';
+import { syncEngine } from '../../services/sync/syncEngine';
 import type { KelasData } from './kelasSchema';
 import type { SiswaData, JenisKelamin } from './siswaSchema';
 import {
@@ -89,6 +90,13 @@ export const SiswaPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    const unsub = syncEngine.subscribe((state) => {
+      if (state === 'synced' || state === 'idle') {
+        loadData();
+      }
+    });
+    return unsub;
   }, []);
 
   // Filtered siswa

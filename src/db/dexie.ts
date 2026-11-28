@@ -14,6 +14,24 @@ export class BisaAbsenDB extends Dexie {
 
 export const db = new BisaAbsenDB();
 
+type DBChangeListener = () => void;
+const dbChangeListeners: Set<DBChangeListener> = new Set();
+
+export function onDBChange(fn: DBChangeListener): () => void {
+  dbChangeListeners.add(fn);
+  return () => dbChangeListeners.delete(fn);
+}
+
+export function notifyDBChange(): void {
+  dbChangeListeners.forEach((fn) => {
+    try {
+      fn();
+    } catch (e) {
+      console.warn('[Dexie] Error in db change listener:', e);
+    }
+  });
+}
+
 /**
  * Repository generik untuk tabel records
  */
@@ -58,6 +76,7 @@ export const genericRepo = {
       dirty: options.dirty ?? 1,
     };
     await db.records.put(record as GenericRecord);
+    notifyDBChange();
     return record;
   },
 
@@ -69,6 +88,7 @@ export const genericRepo = {
         dirty: 1,
         updatedAt: Date.now(),
       });
+      notifyDBChange();
     }
   },
 

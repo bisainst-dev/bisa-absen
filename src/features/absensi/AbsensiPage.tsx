@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { absensiRepo } from './absensiRepository';
+import { syncEngine } from '../../services/sync/syncEngine';
 import { kelasRepo } from '../siswa/kelasRepository';
 import { siswaRepo } from '../siswa/siswaRepository';
 import { useProfilStore } from '../../stores/useProfilStore';
@@ -184,6 +185,7 @@ export const AbsensiPage: React.FC = () => {
 
       await absensiRepo.saveSession(tanggal, selectedKelasId, selectedMapel, entri, catatan);
       showToast('Data absensi berhasil disimpan!');
+      syncEngine.syncNow().catch(() => {});
     } catch (e: unknown) {
       console.error(e);
       alert('Gagal menyimpan absensi');

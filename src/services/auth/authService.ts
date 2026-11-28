@@ -75,35 +75,48 @@ export const authService = {
     // Deteksi Akun Administrator / Super Admin
     if (lowerEmail.includes('admin')) {
       const user: UserAuthProfile = {
-        id: 'usr_admin_master',
+        ...DEMO_USERS.superadmin,
         email,
-        namaLengkap: 'Administrator Utama Esduta Gate',
-        namaPanggilan: 'Admin Pusat',
-        peran: 'superadmin',
-        tenantId: DEMO_TENANT.id,
-        sekolahNama: DEMO_TENANT.namaSekolah,
         token: `jwt_token_admin_${Date.now()}`,
       };
       useAuthStore.getState().login(user, DEMO_TENANT);
       return user;
     }
 
-    // Simulasi respons autentikasi peran lainnya
+    // Deteksi kecocokan akun terdaftar (Budi Santoso, Hendra, Dr. Siti Fatimah)
+    if (lowerEmail.includes('budi') || lowerEmail === DEMO_USERS.guru.email.toLowerCase()) {
+      const user = DEMO_USERS.guru;
+      useAuthStore.getState().login(user, DEMO_TENANT);
+      return user;
+    }
+    if (lowerEmail.includes('hendra') || lowerEmail.includes('operator') || lowerEmail === DEMO_USERS.operator.email.toLowerCase()) {
+      const user = DEMO_USERS.operator;
+      useAuthStore.getState().login(user, DEMO_TENANT);
+      return user;
+    }
+    if (lowerEmail.includes('siti') || lowerEmail.includes('kepsek') || lowerEmail === DEMO_USERS.kepsek.email.toLowerCase()) {
+      const user = DEMO_USERS.kepsek;
+      useAuthStore.getState().login(user, DEMO_TENANT);
+      return user;
+    }
+
+    // Simulasi respons autentikasi peran lainnya dengan ID stabil deterministik
     const role: UserRole = lowerEmail.includes('operator')
       ? 'operator'
       : lowerEmail.includes('kepsek')
         ? 'kepsek'
         : 'guru';
 
+    const cleanId = `usr_${lowerEmail.replace(/[^a-z0-9]/g, '_')}`;
     const user: UserAuthProfile = {
-      id: `usr_${Date.now()}`,
+      id: cleanId,
       email,
       namaLengkap: email.split('@')[0].toUpperCase(),
       namaPanggilan: email.split('@')[0],
       peran: role,
       tenantId: DEMO_TENANT.id,
       sekolahNama: DEMO_TENANT.namaSekolah,
-      token: `jwt_token_${Date.now()}`,
+      token: `jwt_token_${cleanId}`,
     };
 
     useAuthStore.getState().login(user, DEMO_TENANT);
