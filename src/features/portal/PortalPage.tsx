@@ -30,7 +30,6 @@ import {
   LogIn,
   KeyRound,
   Database,
-  Cloud,
   RefreshCw,
   Copy,
   Check,
@@ -453,7 +452,7 @@ export const PortalPage: React.FC = () => {
               }`}
             >
               <Database className="w-4 h-4" />
-              <span>Database & Cloud Sync</span>
+              <span>Database Cloud</span>
             </button>
           )}
         </div>
@@ -1180,14 +1179,14 @@ export const PortalPage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                    Pusat Database Cloud & Sinkronisasi Realtime
+                    Pusat Database Cloud Terpadu (Direct Supabase)
                   </h3>
                   <Badge variant={isSupabaseConfigured() ? 'success' : 'warning'}>
-                    {isSupabaseConfigured() ? 'Cloud Terhubung' : 'Mode Offline Lokal'}
+                    {isSupabaseConfigured() ? 'Database Cloud Aktif' : 'Mode Offline Lokal'}
                   </Badge>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Menghubungkan aplikasi web Vercel dan aplikasi Android native ke database terpusat Supabase / PostgreSQL.
+                  Aplikasi terhubung langsung ke database Supabase / PostgreSQL. Setiap input jadwal, siswa, dan absensi langsung tersimpan ke cloud dan langsung terbaca di semua browser tanpa sistem hybrid.
                 </p>
               </div>
             </div>
@@ -1215,60 +1214,19 @@ export const PortalPage: React.FC = () => {
                 onClick={async () => {
                   setDbSyncing(true);
                   setDbSyncResult(null);
-                  const res = await syncEngine.syncNow();
-                  if (res.success) {
-                    setDbSyncResult(`Sinkronisasi Berhasil! ${res.pushed} data dikirim, ${res.pulled} data ditarik.`);
-                  } else {
-                    setDbSyncResult(`Gagal Sinkronisasi: ${res.error || 'Terjadi kesalahan'}`);
-                  }
-                  setDbSyncing(false);
-                }}
-                disabled={dbSyncing}
-              >
-                <Cloud className={`w-3.5 h-3.5 mr-1.5 ${dbSyncing ? 'animate-spin' : ''}`} />
-                {dbSyncing ? 'Sinkronisasi...' : 'Sinkronkan Sekarang'}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  setDbSyncing(true);
-                  setDbSyncResult(null);
                   const res = await syncEngine.syncAllForce();
                   if (res.success) {
-                    setDbSyncResult(`Full Sync Berhasil! Seluruh ${res.pushed} data lokal diunggah dan ${res.pulled} data cloud ditarik.`);
+                    setDbSyncResult(`Migrasi Berhasil! Seluruh ${res.pushed} data lokal berhasil diunggah ke Supabase Cloud.`);
                   } else {
-                    setDbSyncResult(`Gagal Full Sync: ${res.error || 'Terjadi kesalahan'}`);
+                    setDbSyncResult(`Gagal Migrasi: ${res.error || 'Terjadi kesalahan'}`);
                   }
                   setDbSyncing(false);
                 }}
                 disabled={dbSyncing}
-                title="Unggah seluruh isi database lokal ke cloud dan tarik data cloud terbaru"
+                title="Unggah seluruh data lokal yang pernah ada ke database cloud Supabase"
               >
-                <Upload className="w-3.5 h-3.5 mr-1.5 text-teal-600" />
-                Unggah Semua (Full Sync)
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  setDbSyncing(true);
-                  setDbSyncResult(null);
-                  const res = await syncEngine.pullAllForce();
-                  if (res.success) {
-                    setDbSyncResult(`Tarik Data Berhasil! ${res.pulled} data cloud berhasil diunduh ke browser ini.`);
-                  } else {
-                    setDbSyncResult(`Gagal Menarik Data: ${res.error || 'Terjadi kesalahan'}`);
-                  }
-                  setDbSyncing(false);
-                }}
-                disabled={dbSyncing}
-                title="Tarik seluruh data dari cloud Supabase ke browser ini"
-              >
-                <Download className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
-                Tarik Semua (Force Pull)
+                <Upload className="w-3.5 h-3.5 mr-1.5" />
+                Unggah Data Lokal ke Cloud
               </Button>
             </div>
           </div>

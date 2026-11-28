@@ -1,21 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
 import { useProfilStore } from '../../stores/useProfilStore';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { syncEngine } from '../../services/sync/syncEngine';
-import type { SyncState } from '../../types/saas';
 import { AuthModal } from '../../features/auth/AuthModal';
 import { Badge } from '../ui/Badge';
-import { User, Cloud, CloudOff, RefreshCw, Building, GraduationCap } from 'lucide-react';
+import { User, Cloud, CloudOff, Building, GraduationCap } from 'lucide-react';
 import { DEMO_USERS, DEMO_TENANT } from '../../services/auth/authService';
+import { isSupabaseConfigured } from '../../lib/supabaseClient';
 
 export const AppHeader: React.FC = () => {
   const navigate = useNavigate();
   const { profil, saveProfil } = useProfilStore();
   const { user, isAuthenticated, impersonateUser } = useAuthStore();
-  const [syncState, setSyncState] = useState<SyncState>(syncEngine.getState());
-  const [dirtyCount, setDirtyCount] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const handleLoginAsGuru = () => {
@@ -29,22 +26,6 @@ export const AppHeader: React.FC = () => {
     });
     impersonateUser(targetGuru);
     navigate('/', { replace: true });
-  };
-
-  useEffect(() => {
-    const unsub = syncEngine.subscribe((state, count) => {
-      setSyncState(state);
-      setDirtyCount(count);
-    });
-    return unsub;
-  }, []);
-
-  const handleSyncClick = () => {
-    if (!isAuthenticated) {
-      setIsAuthModalOpen(true);
-    } else {
-      syncEngine.syncNow();
-    }
   };
 
   return (
@@ -107,43 +88,25 @@ export const AppHeader: React.FC = () => {
               </Link>
             )}
 
-            {/* Cloud Sync Status Indicator */}
-            <button
-              onClick={handleSyncClick}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all border ${
-                !isAuthenticated
-                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400'
-                  : syncState === 'syncing'
-                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700 animate-pulse'
-                  : dirtyCount > 0
-                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700'
-                  : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700'
-              }`}
-              title={
-                !isAuthenticated
-                  ? 'Klik untuk masuk / hubungkan ke Cloud Sekolah'
-                  : `${dirtyCount} data belum tersinkron. Klik untuk sinkronkan.`
-              }
-            >
-              {!isAuthenticated ? (
-                <>
-                  <CloudOff className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                  <span className="hidden sm:inline">Lokal</span>
-                </>
-              ) : syncState === 'syncing' ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span className="hidden sm:inline">Sync...</span>
-                </>
-              ) : (
-                <>
-                  <Cloud className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">
-                    {dirtyCount > 0 ? `${dirtyCount} Sync` : 'Cloud'}
-                  </span>
-                </>
-              )}
-            </button>
+            {/* Direct Cloud Database Indicator */}
+            {isSupabaseConfigured() ? (
+              <div
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all border bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60"
+                title="Database Cloud Supabase Terhubung - Seluruh data langsung disimpan dan terbaca secara realtime di semua browser."
+              >
+                <Cloud className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="hidden sm:inline">Cloud DB</span>
+              </div>
+            ) : (
+              <Link
+                to="/portal"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all border bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400"
+                title="Database Cloud belum dikonfigurasi. Klik untuk memasang Supabase di Portal."
+              >
+                <CloudOff className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                <span className="hidden sm:inline">Offline</span>
+              </Link>
+            )}
 
             {profil?.tahunPelajaran && (
               <div className="hidden md:flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 px-3 py-1.5 rounded-full">

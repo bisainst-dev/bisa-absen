@@ -11,7 +11,6 @@ import {
   Lock,
   Mail,
   LogOut,
-  RefreshCw,
 } from 'lucide-react';
 
 interface AuthModalProps {
@@ -81,21 +80,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400">
+            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300">
               <p>
-                Status: <strong>Tersambung ke Cloud</strong>. Data Anda otomatis tersinkronisasi antar-perangkat saat terhubung ke internet.
+                Status: <strong>Database Cloud Terhubung</strong>. Setiap perubahan data langsung tersimpan ke Supabase dan terbaca di semua perangkat.
               </p>
             </div>
 
-            <div className="pt-2 flex items-center justify-between border-t border-slate-200 dark:border-slate-800">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => syncEngine.syncNow()}
-                className="text-xs"
-              >
-                <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Sinkronkan Sekarang
-              </Button>
+            <div className="pt-2 flex items-center justify-end border-t border-slate-200 dark:border-slate-800">
               <Button
                 variant="danger"
                 size="sm"
