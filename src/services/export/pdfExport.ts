@@ -14,6 +14,14 @@ function drawKop(doc: jsPDF, kop: KopDanTandaTangan): number {
   const pageWidth = doc.internal.pageSize.getWidth();
   const startY = 15;
 
+  if (kop.logoUrl && kop.logoUrl.startsWith('data:image')) {
+    try {
+      doc.addImage(kop.logoUrl, 'PNG', 15, startY - 2, 16, 16);
+    } catch (e) {
+      console.warn('Gagal render logo pada PDF:', e);
+    }
+  }
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.setTextColor(20, 30, 45);

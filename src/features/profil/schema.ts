@@ -11,6 +11,7 @@ export const ProfilSchema = z.object({
   semester: z.enum(['Ganjil', 'Genap']).default('Ganjil'),
   kepalaSekolah: z.string().optional().default(''),
   nipKepsek: z.string().optional().default(''),
+  logoUrl: z.string().optional().default(''),
   tampilkanKredit: z.boolean().default(true),
   isOnboarded: z.boolean().default(false),
 });
@@ -28,6 +29,7 @@ export const DEFAULT_PROFIL: ProfilData = {
   semester: 'Ganjil',
   kepalaSekolah: 'Dr. Hj. Siti Fatimah, M.Pd.',
   nipKepsek: '197208151998032004',
+  logoUrl: '',
   tampilkanKredit: true,
   isOnboarded: false,
 };

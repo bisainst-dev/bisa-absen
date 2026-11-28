@@ -175,6 +175,7 @@ export interface KopDanTandaTangan {
   nipKepsek: string;
   tampilkanKredit: boolean;
   tanggalCetak: string;
+  logoUrl?: string;
 }
 
 export function formatTanggalIndonesia(date = new Date()): string {

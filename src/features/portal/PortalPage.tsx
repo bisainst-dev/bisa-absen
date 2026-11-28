@@ -36,6 +36,7 @@ import {
   AlertCircle,
   Sparkles,
   Server,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
 import { genericRepo } from '../../db/dexie';
@@ -181,7 +182,35 @@ export const PortalPage: React.FC = () => {
   const [kopTP, setKopTP] = useState('');
   const [kopSemester, setKopSemester] = useState<'Ganjil' | 'Genap'>('Ganjil');
   const [kopTampilkanKredit, setKopTampilkanKredit] = useState(true);
+  const [kopLogo, setKopLogo] = useState('');
   const [kopSuccess, setKopSuccess] = useState<string | null>(null);
+
+  // Handler upload logo sekolah
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Mohon pilih berkas gambar (PNG, JPG, WebP, SVG)');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran berkas logo maksimal 2MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setKopLogo(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setKopLogo('');
+  };
 
   // Muat data guru dari repository
   const loadGuru = async () => {
@@ -206,6 +235,7 @@ export const PortalPage: React.FC = () => {
       setKopTP(profil.tahunPelajaran || '2026/2027');
       setKopSemester(profil.semester || 'Ganjil');
       setKopTampilkanKredit(profil.tampilkanKredit ?? true);
+      setKopLogo(profil.logoUrl || '');
     }
   }, [profil, currentTenant.namaSekolah]);
 
@@ -280,6 +310,7 @@ export const PortalPage: React.FC = () => {
         tahunPelajaran: kopTP.trim(),
         semester: kopSemester,
         tampilkanKredit: kopTampilkanKredit,
+        logoUrl: kopLogo,
       });
 
       setKopSuccess('Kop sekolah & data pengesahan berhasil disimpan!');
@@ -1643,6 +1674,57 @@ DB_NAME=bisa_absen`}
             )}
 
             <form onSubmit={handleSimpanKop} className="space-y-4">
+              {/* UPLOAD LOGO RESMI SEKOLAH */}
+              <div className="space-y-1.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-brand-600" /> Logo Resmi Sekolah
+                  </label>
+                  {kopLogo && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      className="text-[11px] text-rose-500 hover:text-rose-600 font-semibold flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" /> Hapus Logo
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3.5 pt-1">
+                  {kopLogo ? (
+                    <div className="w-16 h-16 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 flex items-center justify-center shrink-0 shadow-sm">
+                      <img
+                        src={kopLogo}
+                        alt="Logo Sekolah"
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col items-center justify-center text-slate-400 shrink-0">
+                      <Upload className="w-5 h-5 text-slate-400" />
+                      <span className="text-[9px] mt-0.5">Belum ada</span>
+                    </div>
+                  )}
+
+                  <div className="flex-1 space-y-1">
+                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 text-xs font-bold hover:bg-brand-100 dark:hover:bg-brand-900/40 cursor-pointer transition-colors shadow-sm">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{kopLogo ? 'Ganti Logo' : 'Unggah Logo Sekolah'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                      Format PNG/JPG transparan disarankan (maks. 2MB). Ditampilkan otomatis pada lembar kop Pratinjau Dokumen Cetak dan unduhan PDF/Word.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                   Nama Resmi Sekolah / Instansi <span className="text-rose-500">*</span>

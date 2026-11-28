@@ -242,6 +242,7 @@ export const RekapPage: React.FC = () => {
       nipKepsek: profil?.nipKepsek || '197508151999032001',
       tampilkanKredit: profil?.tampilkanKredit ?? true,
       tanggalCetak: formatTanggalIndonesia(),
+      logoUrl: profil?.logoUrl || '',
     };
   }, [profil, activeReport, selectedTahunPelajaran, selectedSemester, selectedKelas, selectedMapel, selectedGuru]);
 
@@ -570,17 +571,29 @@ export const RekapPage: React.FC = () => {
         {/* Lembar Kerja Dokumen A4 Putih */}
         <div className="p-6 sm:p-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm space-y-6 text-slate-900 dark:text-slate-100">
           {/* 1. KOP RESMI */}
-          <div className="text-center space-y-1 border-b-2 border-slate-900 dark:border-slate-100 pb-3">
-            <h2 className="text-base sm:text-lg font-black tracking-wide">
-              {kopData.sekolah.toUpperCase()}
-            </h2>
-            <h3 className="text-xs sm:text-sm font-bold tracking-tight text-brand-700 dark:text-brand-300">
-              {kopData.judulDokumen}
-            </h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Tahun Pelajaran: {kopData.tahunPelajaran} ({kopData.semester}) &nbsp;|&nbsp; Kelas:{' '}
-              {kopData.kelasLabel} &nbsp;|&nbsp; Mata Pelajaran: {kopData.mapel}
-            </p>
+          <div className="flex items-center gap-4 border-b-2 border-slate-900 dark:border-slate-100 pb-3">
+            {kopData.logoUrl ? (
+              <img
+                src={kopData.logoUrl}
+                alt="Logo Sekolah"
+                className="w-14 h-14 sm:w-16 sm:h-16 object-contain shrink-0"
+              />
+            ) : null}
+            <div className={`space-y-1 text-center ${kopData.logoUrl ? 'flex-1' : 'w-full'}`}>
+              <h2 className="text-base sm:text-lg font-black tracking-wide">
+                {kopData.sekolah.toUpperCase()}
+              </h2>
+              <h3 className="text-xs sm:text-sm font-bold tracking-tight text-brand-700 dark:text-brand-300">
+                {kopData.judulDokumen}
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Tahun Pelajaran: {kopData.tahunPelajaran} ({kopData.semester}) &nbsp;|&nbsp; Kelas:{' '}
+                {kopData.kelasLabel} &nbsp;|&nbsp; Mata Pelajaran: {kopData.mapel}
+              </p>
+            </div>
+            {kopData.logoUrl ? (
+              <div className="w-14 sm:w-16 hidden sm:block shrink-0" />
+            ) : null}
           </div>
 
           {/* 2. TABEL DATA SESUAI TIPE LAPORAN */}
