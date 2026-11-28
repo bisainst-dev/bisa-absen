@@ -165,9 +165,9 @@ export const LainnyaPage: React.FC = () => {
         },
         {
           to: '/portal',
-          title: 'Tambah & Kelola Guru',
-          desc: 'Tambah akun guru baru, penugasan mapel, dan rombel kelas',
-          icon: GraduationCap,
+          title: 'Master Mata Pelajaran',
+          desc: 'Kelola kurikulum mata pelajaran sekolah, kode, dan kelompok',
+          icon: BookOpen,
           color: 'bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400',
         },
         {

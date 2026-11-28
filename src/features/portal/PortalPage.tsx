@@ -861,55 +861,13 @@ export const PortalPage: React.FC = () => {
                   <span>Menu Administrasi Utama Operator Sekolah</span>
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Kelola guru pengampu, kop resmi sekolah & pengesahan, serta master data siswa
+                  Kelola kop resmi sekolah & pengesahan, master data siswa, serta kurikulum mata pelajaran
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* MENU 1: TAMBAH & KELOLA GURU */}
-              <Card className="p-5 space-y-3 border-t-4 border-t-brand-500 hover:shadow-md transition-all flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
-                      <GraduationCap className="w-5 h-5" />
-                    </div>
-                    <Badge variant="brand" className="text-[10px]">{guruList.length} Guru</Badge>
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-base text-slate-800 dark:text-slate-100">
-                      Tambah & Kelola Guru
-                    </h4>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Daftarkan guru pengampu baru, atur mata pelajaran yang diampu, dan tentukan rombel kelas.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 pt-2">
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    className="w-full text-xs justify-center"
-                    onClick={() => {
-                      setFormError(null);
-                      setShowAddGuruModal(true);
-                    }}
-                  >
-                    <Plus className="w-3.5 h-3.5 mr-1.5" /> + Tambah Guru Baru
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full text-xs justify-center"
-                    onClick={() => setShowGuruListModal(true)}
-                  >
-                    <Users className="w-3.5 h-3.5 mr-1.5" /> Lihat Semua Guru ({guruList.length})
-                  </Button>
-                </div>
-              </Card>
-
-              {/* MENU 2: KOP SEKOLAH & PENGESAHAN */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* MENU 1: KOP SEKOLAH & PENGESAHAN */}
               <Card className="p-5 space-y-3 border-t-4 border-t-amber-500 hover:shadow-md transition-all flex flex-col justify-between">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -948,7 +906,7 @@ export const PortalPage: React.FC = () => {
                 </div>
               </Card>
 
-              {/* MENU 3: MASTER DATA SISWA */}
+              {/* MENU 2: MASTER DATA SISWA */}
               <Card className="p-5 space-y-3 border-t-4 border-t-brand-500 hover:shadow-md transition-all flex flex-col justify-between">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -979,7 +937,7 @@ export const PortalPage: React.FC = () => {
                 </div>
               </Card>
 
-              {/* MENU 4: MASTER MATA PELAJARAN */}
+              {/* MENU 3: MASTER MATA PELAJARAN */}
               <Card className="p-5 space-y-3 border-t-4 border-t-teal-500 hover:shadow-md transition-all flex flex-col justify-between">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
