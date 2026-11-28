@@ -7,8 +7,6 @@ import { kegiatanRepo } from './kegiatanRepository';
 import { siswaRepo } from '../siswa/siswaRepository';
 import { kelasRepo } from '../siswa/kelasRepository';
 import {
-  STATUS_META,
-  getNextStatus,
   hitungRekapKehadiran,
   type StatusKehadiran,
 } from '../absensi/absensiSchema';
@@ -227,12 +225,10 @@ export const KegiatanPage: React.FC = () => {
   };
 
   // Handlers Absensi Kegiatan
-  const handleToggleStatus = (siswaId: string) => {
-    const current = statusMap[siswaId];
-    const next = getNextStatus(current);
+  const handleSetStatus = (siswaId: string, status: StatusKehadiran) => {
     setStatusMap((prev) => ({
       ...prev,
-      [siswaId]: next,
+      [siswaId]: status,
     }));
   };
 
@@ -517,20 +513,18 @@ export const KegiatanPage: React.FC = () => {
                   ) : (
                     <div className="space-y-2">
                       {memberStudents.map((s, idx) => {
-                        const current = statusMap[s.id];
-                        const meta = current ? STATUS_META[current] : null;
+                        const currentStatus = statusMap[s.id] || 'H';
                         return (
                           <div
                             key={s.id}
-                            onClick={() => handleToggleStatus(s.id)}
-                            className="flex items-center justify-between p-3 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 bg-white dark:bg-slate-900 cursor-pointer touch-target select-none"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 transition-all gap-2"
                           >
-                            <div className="flex items-center gap-2.5">
-                              <span className="text-xs font-semibold text-slate-400 w-5">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="text-xs font-semibold text-slate-400 w-5 shrink-0">
                                 {idx + 1}
                               </span>
-                              <div>
-                                <p className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                              <div className="min-w-0">
+                                <p className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
                                   {s.nama}
                                 </p>
                                 <span className="text-[10px] text-slate-400">
@@ -539,15 +533,57 @@ export const KegiatanPage: React.FC = () => {
                               </div>
                             </div>
 
-                            <span
-                              className={`px-3 py-1 rounded-xl text-xs font-extrabold border ${
-                                meta
-                                  ? meta.badgeClass
-                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-dashed border-slate-300'
-                              }`}
-                            >
-                              {meta ? meta.label : '(Hadir)*'}
-                            </span>
+                            {/* Tombol Pilihan Status Absensi Kegiatan */}
+                            <div className="flex items-center gap-1 self-end sm:self-auto shrink-0 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                              <button
+                                type="button"
+                                onClick={() => handleSetStatus(s.id, 'H')}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                                  currentStatus === 'H'
+                                    ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600 font-extrabold'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 hover:bg-white dark:hover:bg-slate-700'
+                                }`}
+                              >
+                                <Check className="w-3 h-3" />
+                                <span>Hadir</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleSetStatus(s.id, 'S')}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                                  currentStatus === 'S'
+                                    ? 'bg-amber-500 text-white shadow-sm ring-1 ring-amber-500 font-extrabold'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 hover:bg-white dark:hover:bg-slate-700'
+                                }`}
+                              >
+                                <span>Sakit</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleSetStatus(s.id, 'I')}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                                  currentStatus === 'I'
+                                    ? 'bg-sky-500 text-white shadow-sm ring-1 ring-sky-500 font-extrabold'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-sky-600 hover:bg-white dark:hover:bg-slate-700'
+                                }`}
+                              >
+                                <span>Izin</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleSetStatus(s.id, 'A')}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                                  currentStatus === 'A'
+                                    ? 'bg-rose-500 text-white shadow-sm ring-1 ring-rose-500 font-extrabold'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-rose-600 hover:bg-white dark:hover:bg-slate-700'
+                                }`}
+                              >
+                                <span>Alpha</span>
+                              </button>
+                            </div>
                           </div>
                         );
                       })}

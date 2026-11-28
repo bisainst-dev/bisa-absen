@@ -7,8 +7,6 @@ import { kelasRepo } from '../siswa/kelasRepository';
 import { siswaRepo } from '../siswa/siswaRepository';
 import { useProfilStore } from '../../stores/useProfilStore';
 import {
-  STATUS_META,
-  getNextStatus,
   hitungRekapKehadiran,
   type StatusKehadiran,
   type EntriAbsensi,
@@ -139,13 +137,11 @@ export const AbsensiPage: React.FC = () => {
     return classStudents.filter((s) => statusMap[s.id] !== undefined).length;
   }, [classStudents, statusMap]);
 
-  // Cycle status on tap: H -> S -> I -> A -> H
-  const handleToggleStatus = (siswaId: string) => {
-    const current = statusMap[siswaId];
-    const next = getNextStatus(current);
+  // Set status kehadiran langsung (Hadir, Sakit, Izin, Alpha)
+  const handleSetStatus = (siswaId: string, status: StatusKehadiran) => {
     setStatusMap((prev) => ({
       ...prev,
-      [siswaId]: next,
+      [siswaId]: status,
     }));
   };
 
@@ -381,22 +377,15 @@ export const AbsensiPage: React.FC = () => {
       ) : (
         <div className="space-y-2">
           {filteredStudents.map((siswa, idx) => {
-            const currentStatus = statusMap[siswa.id]; // bisa undefined jika belum ditandai
-            const isTagged = currentStatus !== undefined;
-            const meta = currentStatus ? STATUS_META[currentStatus] : null;
+            const currentStatus = statusMap[siswa.id] || 'H';
 
             return (
               <div
                 key={siswa.id}
-                onClick={() => handleToggleStatus(siswa.id)}
-                className={`flex items-center justify-between p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none touch-target active:scale-[0.99] ${
-                  isTagged
-                    ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-brand-500'
-                    : 'bg-white/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800'
-                }`}
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 transition-all gap-3"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-xs font-semibold text-slate-400 w-5 text-center">
+                  <span className="text-xs font-semibold text-slate-400 w-5 text-center shrink-0">
                     {idx + 1}
                   </span>
                   <div
@@ -418,19 +407,64 @@ export const AbsensiPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Status Trigger Pill */}
-                <div className="flex items-center gap-2 shrink-0">
-                  {meta ? (
-                    <span
-                      className={`inline-flex items-center justify-center min-w-[76px] px-3 py-1.5 rounded-xl text-xs font-extrabold border ${meta.badgeClass}`}
-                    >
-                      {meta.label}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center justify-center min-w-[76px] px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-dashed border-slate-300 dark:border-slate-700">
-                      (Hadir)*
-                    </span>
-                  )}
+                {/* Tombol Pilihan Status Absensi: Hadir, Sakit, Izin, Alpha */}
+                <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl">
+                  {/* Hadir */}
+                  <button
+                    type="button"
+                    onClick={() => handleSetStatus(siswa.id, 'H')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      currentStatus === 'H'
+                        ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600 font-extrabold'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 hover:bg-white dark:hover:bg-slate-700'
+                    }`}
+                    title="Tandai Hadir"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Hadir</span>
+                  </button>
+
+                  {/* Sakit */}
+                  <button
+                    type="button"
+                    onClick={() => handleSetStatus(siswa.id, 'S')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      currentStatus === 'S'
+                        ? 'bg-amber-500 text-white shadow-sm ring-1 ring-amber-500 font-extrabold'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 hover:bg-white dark:hover:bg-slate-700'
+                    }`}
+                    title="Tandai Sakit"
+                  >
+                    <span>Sakit</span>
+                  </button>
+
+                  {/* Izin / Ijin */}
+                  <button
+                    type="button"
+                    onClick={() => handleSetStatus(siswa.id, 'I')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      currentStatus === 'I'
+                        ? 'bg-sky-500 text-white shadow-sm ring-1 ring-sky-500 font-extrabold'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-sky-600 hover:bg-white dark:hover:bg-slate-700'
+                    }`}
+                    title="Tandai Izin"
+                  >
+                    <span>Izin</span>
+                  </button>
+
+                  {/* Alpha */}
+                  <button
+                    type="button"
+                    onClick={() => handleSetStatus(siswa.id, 'A')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      currentStatus === 'A'
+                        ? 'bg-rose-500 text-white shadow-sm ring-1 ring-rose-500 font-extrabold'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-rose-600 hover:bg-white dark:hover:bg-slate-700'
+                    }`}
+                    title="Tandai Alpha / Tanpa Keterangan"
+                  >
+                    <span>Alpha</span>
+                  </button>
                 </div>
               </div>
             );
