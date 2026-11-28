@@ -2,12 +2,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
 import { useProfilStore } from '../../stores/useProfilStore';
+import { useAuthStore } from '../../stores/useAuthStore';
 import { kelasRepo } from '../siswa/kelasRepository';
 import { siswaRepo } from '../siswa/siswaRepository';
 import { absensiRepo } from '../absensi/absensiRepository';
 import { nilaiRepo } from '../nilai/nilaiRepository';
 import { jurnalRepo } from '../jurnal/jurnalRepository';
+import { guruRepo, type GuruData } from '../guru/guruRepository';
 import {
   agregasiRekapAbsensi,
   agregasiRekapNilai,
@@ -44,10 +47,16 @@ import {
   FileText,
   Check,
   Printer,
+  GraduationCap,
+  Search,
+  X,
 } from 'lucide-react';
 
 export const RekapPage: React.FC = () => {
   const { profil } = useProfilStore();
+  const { user } = useAuthStore();
+  const isAdminOrOperator = user?.peran === 'superadmin' || user?.peran === 'operator' || user?.peran === 'kepsek';
+
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
   const initialReport =
@@ -67,6 +76,9 @@ export const RekapPage: React.FC = () => {
   const [absensiSessions, setAbsensiSessions] = useState<AbsensiData[]>([]);
   const [nilaiColumns, setNilaiColumns] = useState<NilaiData[]>([]);
   const [jurnalItems, setJurnalItems] = useState<JurnalData[]>([]);
+  const [guruList, setGuruList] = useState<GuruData[]>([]);
+  const [selectedGuruId, setSelectedGuruId] = useState<string>(() => searchParams.get('guruId') || '');
+  const [guruSearchText, setGuruSearchText] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   // Filters
@@ -87,12 +99,13 @@ export const RekapPage: React.FC = () => {
   useEffect(() => {
     async function init() {
       try {
-        const [kList, sList, aList, nList, jList] = await Promise.all([
+        const [kList, sList, aList, nList, jList, gList] = await Promise.all([
           kelasRepo.getAll(),
           siswaRepo.getAll(),
           absensiRepo.getAll(),
           nilaiRepo.getAll(),
           jurnalRepo.getAll(),
+          guruRepo.getAll(),
         ]);
 
         setKelasList(kList);
@@ -100,12 +113,22 @@ export const RekapPage: React.FC = () => {
         setAbsensiSessions(aList);
         setNilaiColumns(nList);
         setJurnalItems(jList);
+        setGuruList(gList);
 
         const initialKelasId = kList[0]?.id || '';
-        const initialMapel =
+        let initialMapel =
           profil?.mapel && profil.mapel.length > 0 ? profil.mapel[0] : 'Matematika';
         const initialSem = profil?.semester || 'Ganjil';
         const initialTP = profil?.tahunPelajaran || '2026/2027';
+
+        const qGuruId = searchParams.get('guruId');
+        if (qGuruId) {
+          setSelectedGuruId(qGuruId);
+          const found = gList.find((g) => g.id === qGuruId);
+          if (found?.mapel) {
+            initialMapel = found.mapel;
+          }
+        }
 
         setSelectedKelasId(initialKelasId);
         setSelectedMapel(initialMapel);
@@ -118,7 +141,37 @@ export const RekapPage: React.FC = () => {
       }
     }
     init();
-  }, [profil]);
+  }, [profil, searchParams]);
+
+  const filteredGuruOptions = useMemo(() => {
+    if (!guruSearchText.trim()) return guruList;
+    const q = guruSearchText.toLowerCase();
+    return guruList.filter(
+      (g) =>
+        g.nama.toLowerCase().includes(q) ||
+        (g.nip && g.nip.includes(q)) ||
+        (g.mapel && g.mapel.toLowerCase().includes(q)) ||
+        (g.kelas && g.kelas.toLowerCase().includes(q))
+    );
+  }, [guruList, guruSearchText]);
+
+  const selectedGuru = useMemo(() => {
+    return guruList.find((g) => g.id === selectedGuruId);
+  }, [guruList, selectedGuruId]);
+
+  const availableMapelList = useMemo(() => {
+    const set = new Set<string>();
+    if (selectedGuru?.mapel) set.add(selectedGuru.mapel);
+    profil?.mapel?.forEach((m) => set.add(m));
+    guruList.forEach((g) => { if (g.mapel) set.add(g.mapel); });
+    absensiSessions.forEach((a) => { if (a.mapel) set.add(a.mapel); });
+    nilaiColumns.forEach((n) => { if (n.mapel) set.add(n.mapel); });
+    jurnalItems.forEach((j) => { if (j.mapel) set.add(j.mapel); });
+    if (set.size === 0) {
+      ['Matematika', 'Bahasa Indonesia', 'IPA Terpadu', 'Bahasa Inggris', 'Pendidikan Agama', 'PJOK', 'IPS', 'Informatika', 'Seni Budaya', 'PPKn'].forEach((m) => set.add(m));
+    }
+    return Array.from(set);
+  }, [selectedGuru, profil, guruList, absensiSessions, nilaiColumns, jurnalItems]);
 
   const selectedKelas = useMemo(() => {
     return kelasList.find((k) => k.id === selectedKelasId);
@@ -173,21 +226,24 @@ export const RekapPage: React.FC = () => {
     if (activeReport === 'nilai') judul = 'REKAPITULASI PENILAIAN SISWA';
     else if (activeReport === 'jurnal') judul = 'JURNAL AGENDA PEMBELAJARAN GURU';
 
+    const guruName = selectedGuru ? selectedGuru.nama : (profil?.namaGuru || 'Budi Santoso, S.Pd.');
+    const guruNip = selectedGuru ? (selectedGuru.nip || '') : (profil?.nip || '');
+
     return {
       judulDokumen: judul,
-      sekolah: profil?.sekolah || 'SEKOLAH DASAR',
+      sekolah: profil?.sekolah || 'SMP Negeri 2 Tanjung',
       tahunPelajaran: selectedTahunPelajaran || '2026/2027',
       semester: selectedSemester,
       kelasLabel: selectedKelas ? selectedKelas.label : '-',
       mapel: selectedMapel,
-      namaGuru: profil?.namaGuru || '',
-      nipGuru: profil?.nip || '',
-      namaKepsek: profil?.kepalaSekolah || '',
-      nipKepsek: profil?.nipKepsek || '',
+      namaGuru: guruName,
+      nipGuru: guruNip,
+      namaKepsek: profil?.kepalaSekolah || 'Dr. Hj. Siti Fatimah, M.Pd.',
+      nipKepsek: profil?.nipKepsek || '197508151999032001',
       tampilkanKredit: profil?.tampilkanKredit ?? true,
       tanggalCetak: formatTanggalIndonesia(),
     };
-  }, [profil, activeReport, selectedTahunPelajaran, selectedSemester, selectedKelas, selectedMapel]);
+  }, [profil, activeReport, selectedTahunPelajaran, selectedSemester, selectedKelas, selectedMapel, selectedGuru]);
 
   // Export handlers
   const handleExportPdf = () => {
@@ -345,7 +401,105 @@ export const RekapPage: React.FC = () => {
       </div>
 
       {/* Filter Options Card */}
-      <Card className="p-4 bg-white dark:bg-slate-900 border space-y-3">
+      <Card className="p-4 bg-white dark:bg-slate-900 border space-y-4">
+        {/* Pencarian & Pemilihan Guru Pengampu (Khusus Admin & Operator) */}
+        <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
+                <GraduationCap className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-black text-slate-800 dark:text-slate-100 block">
+                  Pencarian Guru Pengampu
+                </span>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Pilih guru untuk merekap nilai, absen, atau jurnal pembelajaran mereka
+                </p>
+              </div>
+            </div>
+
+            {isAdminOrOperator && (
+              <Badge variant="warning" className="text-[10px]">
+                Akses Admin / Operator
+              </Badge>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {/* Input Pencarian Guru */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Ketik untuk mencari nama / NIP / mapel guru..."
+                value={guruSearchText}
+                onChange={(e) => setGuruSearchText(e.target.value)}
+                className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+
+            {/* Dropdown Hasil Pencarian Guru */}
+            <div className="flex items-center gap-1.5">
+              <select
+                value={selectedGuruId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setSelectedGuruId(id);
+                  const found = guruList.find((g) => g.id === id);
+                  if (found?.mapel) {
+                    setSelectedMapel(found.mapel);
+                  }
+                }}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                <option value="">
+                  {selectedGuru ? '-- Ganti Pilihan Guru --' : `-- Guru Default (${profil?.namaGuru || 'Profil Saya'}) --`}
+                </option>
+                {filteredGuruOptions.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.nama} - {g.mapel || 'Semua Mapel'} (NIP: {g.nip || '-'})
+                  </option>
+                ))}
+              </select>
+
+              {selectedGuru && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedGuruId('');
+                    setGuruSearchText('');
+                  }}
+                  className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors shrink-0"
+                  title="Reset pilihan guru"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Tag Guru Terpilih Saat Ini */}
+          {selectedGuru && (
+            <div className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px] text-slate-600 dark:text-slate-300">
+              <span className="font-bold text-slate-900 dark:text-white">Guru Ditampilkan:</span>
+              <span className="px-2.5 py-0.5 rounded-lg bg-white dark:bg-slate-800 border font-bold text-amber-700 dark:text-amber-400">
+                {selectedGuru.nama}
+              </span>
+              {selectedGuru.nip && (
+                <span className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border text-slate-500">
+                  NIP. {selectedGuru.nip}
+                </span>
+              )}
+              {selectedGuru.mapel && (
+                <span className="px-2 py-0.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 font-semibold">
+                  Mapel: {selectedGuru.mapel}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="flex flex-col gap-1 text-left">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Kelas</label>
@@ -369,7 +523,7 @@ export const RekapPage: React.FC = () => {
               onChange={(e) => setSelectedMapel(e.target.value)}
               className="px-3 py-2 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-bold outline-none focus:ring-2 focus:ring-brand-500"
             >
-              {profil?.mapel?.map((m) => (
+              {availableMapelList.map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>
