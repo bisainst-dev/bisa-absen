@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Esduta Gate</string>
+    <string name="title_activity_main">Esduta Gate</string>
+    <string name="package_name">id.sch.esduta.gate</string>
+    <string name="custom_url_scheme">id.sch.esduta.gate</string>
+</resources>
