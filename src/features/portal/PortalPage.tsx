@@ -6,7 +6,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useProfilStore } from '../../stores/useProfilStore';
-import { DEMO_TENANT } from '../../services/auth/authService';
+import { DEMO_TENANT, DEMO_USERS } from '../../services/auth/authService';
 import { guruRepo, type GuruData } from '../guru/guruRepository';
 import {
   Building,
@@ -27,11 +27,13 @@ import {
   X,
   FileSpreadsheet,
   Settings,
+  LogIn,
+  KeyRound,
 } from 'lucide-react';
 
 export const PortalPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, tenant } = useAuthStore();
+  const { user, tenant, impersonateUser } = useAuthStore();
   const { profil, saveProfil } = useProfilStore();
   const currentTenant = tenant || DEMO_TENANT;
   const currentRole = user?.peran || 'kepsek';
@@ -39,6 +41,47 @@ export const PortalPage: React.FC = () => {
   const isKepsek = currentRole === 'kepsek';
   const isOperator = currentRole === 'operator';
   const isSuperAdmin = currentRole === 'superadmin';
+
+  const handleImpersonateGuru = (guru: GuruData) => {
+    const userProfile = {
+      id: `usr_${guru.id}`,
+      email: guru.email,
+      namaLengkap: guru.nama,
+      namaPanggilan: guru.nama.split(' ')[0],
+      peran: 'guru' as const,
+      tenantId: currentTenant.id,
+      sekolahNama: kopSekolah || currentTenant.namaSekolah,
+      telepon: guru.telepon,
+    };
+    saveProfil({
+      namaGuru: guru.nama,
+      namaPanggilan: guru.nama.split(' ')[0],
+      sekolah: kopSekolah || currentTenant.namaSekolah,
+      nip: guru.nip,
+      mapel: guru.mapel ? [guru.mapel] : undefined,
+      kelasDiampu: guru.kelas ? guru.kelas.split(',').map((k) => k.trim()) : undefined,
+      isOnboarded: true,
+    });
+    impersonateUser(userProfile);
+    navigate('/', { replace: true });
+  };
+
+  const handleImpersonateRole = (role: 'guru' | 'kepsek' | 'operator') => {
+    const target = DEMO_USERS[role];
+    saveProfil({
+      namaGuru: target.namaLengkap,
+      namaPanggilan: target.namaPanggilan,
+      sekolah: kopSekolah || currentTenant.namaSekolah,
+      nip: target.peran === 'guru' ? '198503152010011012' : undefined,
+      isOnboarded: true,
+    });
+    impersonateUser(target);
+    if (role === 'guru') {
+      navigate('/', { replace: true });
+    } else {
+      navigate('/portal', { replace: true });
+    }
+  };
 
   const [activeTab, setActiveTab] = useState<'kepsek' | 'operator' | 'billing'>(
     isKepsek ? 'kepsek' : 'operator'
@@ -297,6 +340,76 @@ export const PortalPage: React.FC = () => {
             Akses Khusus Kepala Sekolah
           </Badge>
         </div>
+      )}
+
+      {/* =========================================================================
+          PANEL KHUSUS SUPER ADMIN: LOGIN AS USER / IMPERSONASI
+      ========================================================================= */}
+      {isSuperAdmin && (
+        <Card className="p-4 sm:p-5 border-2 border-amber-400/70 dark:border-amber-500/50 bg-gradient-to-r from-amber-50/60 via-white to-amber-50/30 dark:from-amber-950/30 dark:via-slate-900 dark:to-amber-950/20 space-y-3.5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shadow-sm">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
+                    Mode Impersonasi (Login Sebagai Pengguna)
+                  </h4>
+                  <Badge variant="warning" className="text-[10px]">Akses Admin</Badge>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Masuk ke akun peran lain untuk memantau tampilan dan menguji akses secara langsung:
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+            <button
+              onClick={() => handleImpersonateRole('guru')}
+              className="p-3 rounded-xl border border-teal-200 dark:border-teal-800 bg-white dark:bg-slate-900 hover:border-teal-500 hover:shadow-sm transition-all text-left flex items-center gap-3 group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950 text-teal-600 flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
+                <GraduationCap className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">Pak Budi (Guru)</div>
+                <div className="text-[11px] text-slate-500 truncate">Fitur Mengajar & Absensi</div>
+              </div>
+              <LogIn className="w-3.5 h-3.5 text-teal-600 ml-auto shrink-0 opacity-60 group-hover:opacity-100" />
+            </button>
+
+            <button
+              onClick={() => handleImpersonateRole('kepsek')}
+              className="p-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-white dark:bg-slate-900 hover:border-amber-500 hover:shadow-sm transition-all text-left flex items-center gap-3 group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950 text-amber-600 flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">Dr. Hj. Siti (Kepsek)</div>
+                <div className="text-[11px] text-slate-500 truncate">Monitoring & Rekap Dinas</div>
+              </div>
+              <LogIn className="w-3.5 h-3.5 text-amber-600 ml-auto shrink-0 opacity-60 group-hover:opacity-100" />
+            </button>
+
+            <button
+              onClick={() => handleImpersonateRole('operator')}
+              className="p-3 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 hover:border-indigo-500 hover:shadow-sm transition-all text-left flex items-center gap-3 group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
+                <Building className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">Hendra (Operator)</div>
+                <div className="text-[11px] text-slate-500 truncate">Master Siswa & Rombel</div>
+              </div>
+              <LogIn className="w-3.5 h-3.5 text-indigo-600 ml-auto shrink-0 opacity-60 group-hover:opacity-100" />
+            </button>
+          </div>
+        </Card>
       )}
 
       {/* =========================================================================
@@ -730,13 +843,25 @@ export const PortalPage: React.FC = () => {
                           </Badge>
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <button
-                            onClick={() => handleHapusGuru(guru.id, guru.nama)}
-                            className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors"
-                            title="Hapus Guru"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {isSuperAdmin && (
+                              <button
+                                onClick={() => handleImpersonateGuru(guru)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors"
+                                title={`Login sebagai ${guru.nama}`}
+                              >
+                                <LogIn className="w-3 h-3" />
+                                <span>Login User</span>
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleHapusGuru(guru.id, guru.nama)}
+                              className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors"
+                              title="Hapus Guru"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1124,13 +1249,25 @@ export const PortalPage: React.FC = () => {
                         {guru.telepon && <div className="text-slate-400">{guru.telepon}</div>}
                       </td>
                       <td className="py-2.5 px-3 text-right">
-                        <button
-                          onClick={() => handleHapusGuru(guru.id, guru.nama)}
-                          className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors"
-                          title="Hapus Guru"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {isSuperAdmin && (
+                            <button
+                              onClick={() => handleImpersonateGuru(guru)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors"
+                              title={`Login sebagai ${guru.nama}`}
+                            >
+                              <LogIn className="w-3 h-3" />
+                              <span>Login User</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleHapusGuru(guru.id, guru.nama)}
+                            className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors"
+                            title="Hapus Guru"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
