@@ -419,9 +419,9 @@ export const PortalPage: React.FC = () => {
       )}
 
       {/* =========================================================================
-          PANEL KHUSUS SUPER ADMIN & OPERATOR: LOGIN AS USER / IMPERSONASI
+          PANEL KHUSUS SUPER ADMIN: LOGIN AS USER / IMPERSONASI
       ========================================================================= */}
-      {(isSuperAdmin || isOperator) && (
+      {isSuperAdmin && (
         <Card className="p-4 sm:p-5 border-2 border-amber-400/70 dark:border-amber-500/50 bg-gradient-to-r from-amber-50/60 via-white to-amber-50/30 dark:from-amber-950/30 dark:via-slate-900 dark:to-amber-950/20 space-y-3.5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2.5">
