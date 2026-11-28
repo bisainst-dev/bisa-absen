@@ -1,13 +1,17 @@
 import { genericRepo } from '../../db/dexie';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { getSupabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import type { SyncState, SyncPushResponse, SyncPullResponse } from '../../types/saas';
 import type { GenericRecord } from '../../types/database';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 class SyncEngine {
   private state: SyncState = 'idle';
   private listeners: Set<(state: SyncState, dirtyCount: number) => void> = new Set();
   private lastSyncTime: number = 0;
   private isSyncing = false;
+  private realtimeChannel: RealtimeChannel | null = null;
+  private inMemoryCloudCache: Record<string, GenericRecord> = {};
 
   constructor() {
     if (typeof localStorage !== 'undefined') {
@@ -23,6 +27,56 @@ class SyncEngine {
         this.state = 'offline';
         this.notify();
       });
+    }
+
+    // Inisialisasi Realtime jika Supabase sudah terkonfigurasi
+    this.setupRealtimeSubscription();
+  }
+
+  public setupRealtimeSubscription(): void {
+    const supabase = getSupabase();
+    if (!supabase) {
+      if (this.realtimeChannel) {
+        this.realtimeChannel.unsubscribe();
+        this.realtimeChannel = null;
+      }
+      return;
+    }
+
+    if (this.realtimeChannel) return;
+
+    try {
+      this.realtimeChannel = supabase
+        .channel('bisa_absen_records_channel')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'records' },
+          async (payload) => {
+            const row = (payload.new || payload.old) as {
+              id?: string;
+              kind?: string;
+              data?: Record<string, unknown>;
+              updated_at?: number | string;
+              deleted?: number;
+            } | null;
+
+            if (row && row.id && row.kind) {
+              const incoming: GenericRecord = {
+                id: row.id,
+                kind: row.kind,
+                data: row.data || {},
+                updatedAt: Number(row.updated_at || Date.now()),
+                deleted: (row.deleted ?? 0) as 0 | 1,
+                dirty: 0,
+              };
+              await genericRepo.upsertFromCloud([incoming]);
+              this.notify();
+            }
+          }
+        )
+        .subscribe();
+    } catch (err) {
+      console.warn('[SyncEngine] Gagal inisialisasi Supabase Realtime channel:', err);
     }
   }
 
@@ -54,16 +108,42 @@ class SyncEngine {
     }
   }
 
-  private inMemoryCloudCache: Record<string, GenericRecord> = {};
-
   /**
-   * Simulasi mock cloud API (atau memanggil endpoint Supabase / REST jika URL tersedia)
+   * PUSH: Kirim data lokal yang kotor ke Database Cloud (Supabase atau Vercel)
    */
   private async callCloudApiPush(records: GenericRecord[]): Promise<SyncPushResponse> {
-    // Simulasi jeda network realistis (400ms)
-    await new Promise((r) => setTimeout(r, 100));
+    const supabase = getSupabase();
 
-    // Simpan ke cloud cache lokal browser untuk demonstrasi multi-device
+    if (supabase) {
+      const auth = useAuthStore.getState();
+      const tenantId = auth.tenant?.id || auth.user?.tenantId || 'tenant-demo-smpn2';
+      const userId = auth.user?.id || 'usr-guru-budi';
+
+      const rows = records.map((r) => ({
+        id: r.id,
+        tenant_id: tenantId,
+        user_id: userId,
+        kind: r.kind,
+        data: r.data,
+        updated_at: r.updatedAt,
+        deleted: r.deleted ?? 0,
+      }));
+
+      const { error } = await supabase.from('records').upsert(rows, { onConflict: 'id' });
+
+      if (error) {
+        throw new Error(`Gagal push ke Supabase: ${error.message}`);
+      }
+
+      return {
+        success: true,
+        acceptedCount: records.length,
+        serverTimestamp: Date.now(),
+      };
+    }
+
+    // Fallback: Penyimpanan lokal browser jika Supabase belum disambungkan
+    await new Promise((r) => setTimeout(r, 100));
     const cloudRecordsKey = 'bisa_absen_cloud_records_mock';
     let existingCloud: Record<string, GenericRecord> = this.inMemoryCloudCache;
     if (typeof localStorage !== 'undefined') {
@@ -94,9 +174,55 @@ class SyncEngine {
     };
   }
 
+  /**
+   * PULL: Ambil data terbaru dari Database Cloud (Supabase atau Vercel)
+   */
   private async callCloudApiPull(sinceTimestamp: number): Promise<SyncPullResponse> {
-    await new Promise((r) => setTimeout(r, 100));
+    const supabase = getSupabase();
 
+    if (supabase) {
+      const auth = useAuthStore.getState();
+      const tenantId = auth.tenant?.id || auth.user?.tenantId || 'tenant-demo-smpn2';
+
+      let query = supabase
+        .from('records')
+        .select('*')
+        .gt('updated_at', sinceTimestamp);
+
+      if (tenantId) {
+        query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        throw new Error(`Gagal pull dari Supabase: ${error.message}`);
+      }
+
+      const changes: GenericRecord[] = (data || []).map((row: {
+        id: string;
+        kind: string;
+        data: Record<string, unknown>;
+        updated_at: number | string;
+        deleted?: number;
+      }) => ({
+        id: row.id,
+        kind: row.kind,
+        data: row.data,
+        updatedAt: Number(row.updated_at),
+        deleted: (row.deleted ?? 0) as 0 | 1,
+        dirty: 0,
+      }));
+
+      return {
+        success: true,
+        changes,
+        serverTimestamp: Date.now(),
+        hasMore: false,
+      };
+    }
+
+    // Fallback: Mock local cache
+    await new Promise((r) => setTimeout(r, 100));
     const cloudRecordsKey = 'bisa_absen_cloud_records_mock';
     let existingCloud: Record<string, GenericRecord> = this.inMemoryCloudCache;
     if (typeof localStorage !== 'undefined') {
@@ -126,21 +252,40 @@ class SyncEngine {
     success: boolean;
     pushed: number;
     pulled: number;
+    isCloudConnected: boolean;
     error?: string;
   }> {
     const auth = useAuthStore.getState();
     if (!auth.isAuthenticated) {
-      return { success: false, pushed: 0, pulled: 0, error: 'Belum masuk ke akun cloud' };
+      return {
+        success: false,
+        pushed: 0,
+        pulled: 0,
+        isCloudConnected: isSupabaseConfigured(),
+        error: 'Belum masuk ke akun',
+      };
     }
 
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       this.state = 'offline';
       await this.notify();
-      return { success: false, pushed: 0, pulled: 0, error: 'Perangkat sedang offline' };
+      return {
+        success: false,
+        pushed: 0,
+        pulled: 0,
+        isCloudConnected: isSupabaseConfigured(),
+        error: 'Perangkat sedang offline',
+      };
     }
 
     if (this.isSyncing) {
-      return { success: false, pushed: 0, pulled: 0, error: 'Sinkronisasi sedang berjalan' };
+      return {
+        success: false,
+        pushed: 0,
+        pulled: 0,
+        isCloudConnected: isSupabaseConfigured(),
+        error: 'Sinkronisasi sedang berjalan',
+      };
     }
 
     this.isSyncing = true;
@@ -149,9 +294,15 @@ class SyncEngine {
 
     let pushed = 0;
     let pulled = 0;
+    const isCloudConnected = isSupabaseConfigured();
 
     try {
-      // 1. PUSH: Kirim record lokal yang dirty
+      // Pastikan channel realtime aktif jika cloud terpasang
+      if (isCloudConnected && !this.realtimeChannel) {
+        this.setupRealtimeSubscription();
+      }
+
+      // 1. PUSH: Kirim record lokal yang kotor (dirty)
       const dirtyRecords = await genericRepo.findDirty();
       if (dirtyRecords.length > 0) {
         const pushRes = await this.callCloudApiPush(dirtyRecords);
@@ -162,7 +313,7 @@ class SyncEngine {
         }
       }
 
-      // 2. PULL: Tarik perubahan dari cloud
+      // 2. PULL: Tarik perubahan delta dari cloud
       const pullRes = await this.callCloudApiPull(this.lastSyncTime);
       if (pullRes.success && pullRes.changes.length > 0) {
         pulled = await genericRepo.upsertFromCloud(pullRes.changes);
@@ -184,7 +335,7 @@ class SyncEngine {
         }
       }, 3000);
 
-      return { success: true, pushed, pulled };
+      return { success: true, pushed, pulled, isCloudConnected };
     } catch (err: unknown) {
       console.error('Gagal sinkronisasi cloud:', err);
       this.state = 'error';
@@ -193,6 +344,7 @@ class SyncEngine {
         success: false,
         pushed,
         pulled,
+        isCloudConnected,
         error: err instanceof Error ? err.message : 'Terjadi kesalahan jaringan',
       };
     } finally {
