@@ -37,6 +37,7 @@ import {
   Sparkles,
   Server,
   Image as ImageIcon,
+  Edit2,
 } from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
 import { genericRepo } from '../../db/dexie';
@@ -174,6 +175,19 @@ export const PortalPage: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
 
+  // State Modal & Form Edit Guru
+  const [showEditGuruModal, setShowEditGuruModal] = useState(false);
+  const [editingGuru, setEditingGuru] = useState<GuruData | null>(null);
+  const [editNama, setEditNama] = useState('');
+  const [editNip, setEditNip] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editMapel, setEditMapel] = useState('');
+  const [editKelas, setEditKelas] = useState('');
+  const [editTelepon, setEditTelepon] = useState('');
+  const [editStatus, setEditStatus] = useState<'Aktif' | 'Cuti' | 'Nonaktif'>('Aktif');
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSuccess, setEditSuccess] = useState<string | null>(null);
+
   // State Modal Kop Sekolah & Pengesahan
   const [showKopModal, setShowKopModal] = useState(false);
   const [kopSekolah, setKopSekolah] = useState('');
@@ -297,6 +311,75 @@ export const PortalPage: React.FC = () => {
         console.error(err);
         alert('Gagal menghapus guru');
       }
+    }
+  };
+
+  const handleOpenEditGuru = (guru: GuruData) => {
+    setEditingGuru(guru);
+    setEditNama(guru.nama);
+    setEditNip(guru.nip || '');
+    setEditEmail(guru.email);
+    setEditMapel(guru.mapel);
+    setEditKelas(guru.kelas);
+    setEditTelepon(guru.telepon || '');
+    setEditStatus(guru.status || 'Aktif');
+    setEditError(null);
+    setEditSuccess(null);
+    setShowEditGuruModal(true);
+  };
+
+  const handleSimpanEditGuru = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingGuru) return;
+    if (!editNama.trim()) {
+      setEditError('Nama lengkap guru wajib diisi');
+      return;
+    }
+    if (!editEmail.trim()) {
+      setEditError('Email akun guru wajib diisi');
+      return;
+    }
+    if (!editMapel.trim()) {
+      setEditError('Mata pelajaran yang diampu wajib diisi');
+      return;
+    }
+    if (!editKelas.trim()) {
+      setEditError('Kelas yang diampu wajib diisi (contoh: Kelas 7A, 8B)');
+      return;
+    }
+
+    try {
+      await guruRepo.update(editingGuru.id, {
+        nama: editNama.trim(),
+        nip: editNip.trim(),
+        email: editEmail.trim(),
+        mapel: editMapel.trim(),
+        kelas: editKelas.trim(),
+        telepon: editTelepon.trim(),
+        status: editStatus,
+      });
+
+      // Jika data guru yang diedit sama dengan profil guru aktif, sinkronkan profilnya
+      if (profil && (profil.namaGuru === editingGuru.nama || editingGuru.email === DEMO_USERS.guru.email)) {
+        await saveProfil({
+          namaGuru: editNama.trim(),
+          namaPanggilan: editNama.split(' ')[0],
+          nip: editNip.trim(),
+          mapel: [editMapel.trim()],
+          kelasDiampu: editKelas.split(',').map((k) => k.trim()),
+        });
+      }
+
+      await loadGuru();
+      setEditSuccess('Data akun guru berhasil diperbarui!');
+      setTimeout(() => {
+        setEditSuccess(null);
+        setShowEditGuruModal(false);
+        setEditingGuru(null);
+      }, 1200);
+    } catch (err) {
+      console.error(err);
+      setEditError('Terjadi kesalahan saat memperbarui data guru');
     }
   };
 
@@ -1536,24 +1619,13 @@ DB_NAME=bisa_absen`}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="primary"
-                  className="text-xs"
-                  onClick={() => {
-                    setShowAddGuruModal(true);
-                  }}
-                >
-                  <Plus className="w-3.5 h-3.5 mr-1" /> Tambah Guru
-                </Button>
-                <button
-                  onClick={() => setShowGuruListModal(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+              <button
+                onClick={() => setShowGuruListModal(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                title="Tutup"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <div className="overflow-y-auto flex-1 border rounded-xl border-slate-200 dark:border-slate-800">
@@ -1594,12 +1666,20 @@ DB_NAME=bisa_absen`}
                           {(isSuperAdmin || isOperator) && (
                             <>
                               <button
+                                onClick={() => handleOpenEditGuru(guru)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
+                                title={`Edit data & akun ${guru.nama}`}
+                              >
+                                <Edit2 className="w-3 h-3" />
+                                <span>Edit</span>
+                              </button>
+                              <button
                                 onClick={() => handleImpersonateGuru(guru)}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors"
                                 title={`Login sebagai ${guru.nama}`}
                               >
                                 <LogIn className="w-3 h-3" />
-                                <span>Login as Guru</span>
+                                <span>Login</span>
                               </button>
                               <button
                                 onClick={() => {
@@ -1634,6 +1714,175 @@ DB_NAME=bisa_absen`}
                 Tutup
               </Button>
             </div>
+          </Card>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: EDIT DATA & AKUN GURU PENGAMPU
+      ========================================================================= */}
+      {showEditGuruModal && editingGuru && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <Card className="w-full max-w-lg p-6 space-y-4 text-left relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                  <Edit2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
+                    Edit Data & Akun Guru
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Perbarui profil, mata pelajaran, dan rombel mengajar
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowEditGuruModal(false);
+                  setEditingGuru(null);
+                }}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {editError && (
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-semibold">
+                {editError}
+              </div>
+            )}
+
+            {editSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                <span>{editSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSimpanEditGuru} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Nama Lengkap & Gelar <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Contoh: Budi Santoso, S.Pd."
+                  value={editNama}
+                  onChange={(e) => setEditNama(e.target.value)}
+                  className="w-full text-xs"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    NIP / NUPTK
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Contoh: 198503152010012015"
+                    value={editNip}
+                    onChange={(e) => setEditNip(e.target.value)}
+                    className="w-full text-xs font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Email Akun Guru <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="budi@sekolah.sch.id"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="w-full text-xs"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Mata Pelajaran <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Contoh: Matematika"
+                    value={editMapel}
+                    onChange={(e) => setEditMapel(e.target.value)}
+                    className="w-full text-xs"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Kelas yang Diampu <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Contoh: Kelas 7A, Kelas 8B"
+                    value={editKelas}
+                    onChange={(e) => setEditKelas(e.target.value)}
+                    className="w-full text-xs"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Nomor HP / WhatsApp
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Contoh: 081234567890"
+                    value={editTelepon}
+                    onChange={(e) => setEditTelepon(e.target.value)}
+                    className="w-full text-xs font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Status Akun
+                  </label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value as 'Aktif' | 'Cuti' | 'Nonaktif')}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200"
+                  >
+                    <option value="Aktif">Aktif</option>
+                    <option value="Cuti">Cuti</option>
+                    <option value="Nonaktif">Nonaktif</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowEditGuruModal(false);
+                    setEditingGuru(null);
+                  }}
+                >
+                  Batal
+                </Button>
+                <Button type="submit" variant="primary" size="sm">
+                  <Check className="w-4 h-4 mr-1" /> Simpan Perubahan
+                </Button>
+              </div>
+            </form>
           </Card>
         </div>
       )}
