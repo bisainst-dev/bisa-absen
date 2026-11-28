@@ -414,7 +414,7 @@ if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
 
   // SPA fallback: seluruh rute frontend diarahkan ke index.html
-  app.get('*', (req, res) => {
+  app.use((req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });
 } else {
